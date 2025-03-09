@@ -113,7 +113,7 @@
     <div class="content visible">
         <div class="container">
             <h1>U.S. Waste Generation and Recycling (1960-2025)</h1>
-            <div class="subtitle">Source: U.S. Environmental Protection Agency. "Facts and Figures on Materials, Wastes and Recycling." www.epa.gov. <i>Data excludes hazardous materials.<i></div>
+            <div class="subtitle">Source: The U.S. Environmental Protection Agency. <a href="https://www.epa.gov/facts-and-figures-about-materials-waste-and-recycling/national-overview-facts-and-figures-materials" target="_blank">"National Overview: Facts and Figures on Materials, Wastes and Recycling".</a> <i>Data excludes hazardous materials.</i></div>
             <div class="chart-container">
                 <canvas id="wasteChart"></canvas>
             </div>
