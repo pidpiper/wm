@@ -20,12 +20,6 @@
             overflow-y: auto;
         }
 
-        .character {
-            display: inline-block;
-            padding: 0;
-            margin: 0;
-        }
-
         .content {
             flex-grow: 1;
             display: flex;
@@ -42,10 +36,6 @@
 
         .content.visible {
             opacity: 1;
-        }
-
-        .content.hidden {
-            display: none;
         }
 
         .container {
@@ -66,28 +56,6 @@
             font-size: 12px;
             color: rgb(102, 102, 102);
             margin-bottom: 24px;
-        }
-
-        p {
-            margin-bottom: 24px;
-            margin-top: 0;
-        }
-
-        a {
-            color: rgb(90, 90, 90);
-            text-decoration-line: underline;
-            text-decoration-color: #696969;
-            transition: opacity 0.2s ease;
-        }
-
-        a:hover {
-            opacity: 0.6;
-        }
-
-        hr {
-            border: none;
-            border-top: 1px solid #EAEAEA;
-            margin: 24px 0 16px;
         }
 
         .chart-container {
@@ -117,7 +85,7 @@
             <div class="chart-container">
                 <canvas id="wasteChart"></canvas>
             </div>
-            <div class="footnote"><i>*2020 and 2025 values are projections based on average 5-year growth rate since 1960.</i></div>
+            <div class="footnote"><i>*The 2020 and 2025 values are projections based on linear extrapolation using five-year interval growth rates.</i></div>
         </div>
     </div>
 
@@ -126,7 +94,7 @@
         const years = [1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, "2020*", "2025*"];
 
         // Updated waste data (in million tons)
-        const landfillData = [82.28, 94.32, 113.32, 118.54, 123.68, 129.23, 145.27, 151.23, 138.60, 135.17, 136.22, 138.63, 145.50, 152.80];
+        const landfillData = [82.28, 94.32, 113.32, 118.54, 123.68, 129.23, 145.27, 151.23, 138.60, 135.17, 136.22, 138.63, 147.50, 152.80];
         const recyclingData = [5.61, 6.48, 8.02, 9.61, 14.46, 16.75, 29.04, 44.25, 52.87, 58.45, 64.74, 66.52, 71.20, 74.80];
         const totalWasteData = [87.89, 100.80, 121.34, 128.15, 140.82, 152.12, 203.20, 238.91, 241.66, 247.67, 250.57, 261.84, 293.60, 309.10];
 
@@ -142,29 +110,35 @@
                     {
                         label: 'Total Waste',
                         data: totalWasteData,
-                        backgroundColor: 'rgba(102, 102, 102, 0.2)', // Subtle gray fill
-                        borderColor: 'rgba(102, 102, 102, 0.8)', // Gray border
+                        backgroundColor: 'rgb(102, 102, 102)', // Solid gray fill
+                        borderColor: 'rgb(80, 80, 80)',        // Darker gray border
                         borderWidth: 2,
-                        fill: true, // Shaded from bottom
+                        fill: true,                           // Fill from bottom
                         tension: 0.3,
-                        pointRadius: 0 // No points for cleaner look
+                        pointRadius: 0,
+                        order: 2                              // Drawn first (background)
                     },
                     {
                         label: 'Landfill',
                         data: landfillData,
-                        backgroundColor: 'rgba(200, 200, 200, 0)', // Light gray fill
-                        borderColor: 'rgba(100, 102, 100, 0.8)',
-                        borderWidth: 0, // No stroke for landfill
-                        fill: true, // Fill from bottom
-                        tension: 0.3
+                        backgroundColor: 'rgb(135, 165, 185)', // Muted blue fill
+                        borderColor: 'rgb(100, 130, 150)',     // Slightly darker muted blue border
+                        borderWidth: 2,
+                        fill: true,                           // Fill from bottom
+                        tension: 0.3,
+                        pointRadius: 0,
+                        order: 1                              // Drawn second (middle)
                     },
                     {
                         label: 'Recycling',
                         data: recyclingData,
-                        backgroundColor: 'rgba(50, 150, 50, 0.7)', // Green for recycling
-                        borderColor: 'rgba(0, 100, 0, 1)', // Dark green border
-                        fill: true, // Fill from bottom
-                        tension: 0.3
+                        backgroundColor: 'rgb(50, 150, 50)',  // Solid green fill
+                        borderColor: 'rgb(0, 100, 0)',        // Dark green border
+                        borderWidth: 2,
+                        fill: true,                           // Fill from bottom
+                        tension: 0.3,
+                        pointRadius: 0,
+                        order: 0                              // Drawn last (foreground)
                     }
                 ]
             },
@@ -172,11 +146,6 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    title: {
-                        display: true,
-                        padding: { top: 0, bottom: 5 },
-                        color: 'rgb(102, 102, 102)'
-                    },
                     tooltip: {
                         mode: 'index',
                         intersect: false,
@@ -188,61 +157,53 @@
                     },
                     legend: {
                         position: 'bottom',
-                        align: 'start', // Align to the left
+                        align: 'start',
                         labels: {
                             font: { size: 14 },
                             padding: 10,
                             color: 'rgb(102, 102, 102)',
-                            filter: function(legendItem, chartData) {
-                                // Exclude 'Landfill' from the legend
-                                return legendItem.text !== 'Landfill';
-                            },
+                            boxWidth: 20,
+                            boxHeight: 10,
                             generateLabels: function(chart) {
                                 const defaultLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
                                 return defaultLabels.map(label => {
                                     if (label.text === 'Total Waste') {
-                                        label.text = 'Total Waste (landfill, recycling, composting, combustion w/ energy recovery)';
+                                        label.text = 'Total Waste (landfill, recycling, composting, combustion)';
                                     }
                                     return label;
                                 });
                             }
-                        },
-                        padding: 10,
-                        boxWidth: 20,
-                        boxHeight: 10
+                        }
                     }
                 },
                 scales: {
                     y: {
-                        stacked: false, // Disable stacking since all fill from bottom
+                        stacked: false, // No stacking, just overlapping
                         beginAtZero: true,
                         title: { 
                             display: true, 
                             text: 'Million Tons', 
-                            font: { size: 14, weight: 'bold', color: 'rgb(102, 102, 102)' }
+                            font: { size: 14, weight: 'bold' }
                         },
-                        ticks: { font: { size: 14, color: 'rgb(102, 102, 102)' } },
+                        ticks: { font: { size: 14 } },
                         grid: { 
                             borderDash: [5, 5], 
                             color: 'rgba(0, 0, 0, 0.1)',
-                            drawOnChartArea: true, // Keep horizontal
-                            drawTicks: false // Remove vertical gridlines
+                            drawTicks: false
                         }
                     },
                     x: {
                         title: { 
                             display: true, 
                             text: 'Year', 
-                            font: { size: 14, weight: 'bold', color: 'rgb(102, 102, 102)' }
+                            font: { size: 14, weight: 'bold' }
                         },
-                        ticks: { font: { size: 14, color: 'rgb(102, 102, 102)' } },
-                        grid: { 
-                            display: false // Remove vertical gridlines
-                        }
+                        ticks: { font: { size: 14 } },
+                        grid: { display: false }
                     }
                 },
                 elements: {
-                    line: { borderWidth: 1 }, // Default, overridden for Landfill
+                    line: { borderWidth: 2 },
                     point: { radius: 0 }
                 },
                 layout: {
