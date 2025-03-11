@@ -81,7 +81,7 @@
     <div class="content visible">
         <div class="container">
             <h1>U.S. Waste Generation and Recycling (1960-2025)</h1>
-            <div class="subtitle">Source: The U.S. Environmental Protection Agency. <a href="https://www.epa.gov/facts-and-figures-about-materials-waste-and-recycling/national-overview-facts-and-figures-materials" target="_blank">"National Overview: Facts and Figures on Materials, Wastes and Recycling".</a> <i>Data excludes hazardous materials.</i></div>
+            <div class="subtitle">Source: The U.S. Environmental Protection Agency. <a href="https://www.epa.gov/facts-and-figures-about-materials-waste-and-recycling/national-overview-facts-and-figures-materials" target="_blank">"National Overview: Facts and Figures on Materials, Wastes and Recycling".</a> <i>Data encompasses 1960–2018 and excludes hazardous materials.</i></div>
             <div class="chart-container">
                 <canvas id="wasteChart"></canvas>
             </div>
@@ -94,9 +94,10 @@
         const years = [1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, "2020*", "2025*"];
 
         // Updated waste data (in million tons)
-        const landfillData = [82.28, 94.32, 113.32, 118.54, 123.68, 129.23, 145.27, 151.23, 138.60, 135.17, 136.22, 138.63, 147.50, 152.80];
-        const recyclingData = [5.61, 6.48, 8.02, 9.61, 14.46, 16.75, 29.04, 44.25, 52.87, 58.45, 64.74, 66.52, 71.20, 74.80];
-        const totalWasteData = [87.89, 100.80, 121.34, 128.15, 140.82, 152.12, 203.20, 238.91, 241.66, 247.67, 250.57, 261.84, 293.60, 309.10];
+        const landfillData = [82.51, 97.55, 112.59, 123.48, 134.36, 139.82, 145.27, 142.77, 140.26, 142.29, 136.31, 137.61, 151.31, 161.70];
+        const recyclingData = [5.61, 6.82, 8.02, 11.27, 14.52, 21.78, 29.04, 41.03, 53.01, 59.24, 65.26, 67.56, 70.27, 72.63];
+        const compostingData = [0.00, 0.00, 0.00, 0.00, 0.00, 2.10, 4.20, 10.33, 16.45, 20.55, 20.17, 23.39, 26.01, 28.25];
+        const combustionData = [0.00, 0.23, 0.45, 1.61, 2.76, 16.26, 29.76, 31.75, 33.73, 31.65, 29.31, 33.55, 35.22, 36.56];
 
         // Get canvas context
         const ctx = document.getElementById('wasteChart').getContext('2d');
@@ -108,37 +109,44 @@
                 labels: years,
                 datasets: [
                     {
-                        label: 'Total Waste',
-                        data: totalWasteData,
-                        backgroundColor: 'rgb(102, 102, 102)', // Solid gray fill
-                        borderColor: 'rgb(80, 80, 80)',        // Darker gray border
-                        borderWidth: 2,
-                        fill: true,                           // Fill from bottom
-                        tension: 0.3,
-                        pointRadius: 0,
-                        order: 2                              // Drawn first (background)
-                    },
-                    {
                         label: 'Landfill',
                         data: landfillData,
-                        backgroundColor: 'rgb(135, 165, 185)', // Muted blue fill
-                        borderColor: 'rgb(100, 130, 150)',     // Slightly darker muted blue border
+                        backgroundColor: 'rgb(135, 165, 185)', // Muted blue
+                        borderColor: 'rgb(100, 130, 150)',
                         borderWidth: 2,
-                        fill: true,                           // Fill from bottom
+                        fill: true,
                         tension: 0.3,
-                        pointRadius: 0,
-                        order: 1                              // Drawn second (middle)
+                        pointRadius: 0
                     },
                     {
                         label: 'Recycling',
                         data: recyclingData,
-                        backgroundColor: 'rgb(50, 150, 50)',  // Solid green fill
-                        borderColor: 'rgb(0, 100, 0)',        // Dark green border
+                        backgroundColor: 'rgb(50, 150, 50)',  // Green
+                        borderColor: 'rgb(0, 100, 0)',
                         borderWidth: 2,
-                        fill: true,                           // Fill from bottom
+                        fill: true,
                         tension: 0.3,
-                        pointRadius: 0,
-                        order: 0                              // Drawn last (foreground)
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Combustion with Energy Recovery',
+                        data: combustionData,
+                        backgroundColor: 'rgb(220, 20, 60)',   // Crimson red
+                        borderColor: 'rgb(180, 10, 40)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Composting',
+                        data: compostingData,
+                        backgroundColor: 'rgb(255, 215, 0)',   // Gold
+                        borderColor: 'rgb(205, 165, 0)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0
                     }
                 ]
             },
@@ -149,9 +157,24 @@
                     tooltip: {
                         mode: 'index',
                         intersect: false,
+                        // Enable HTML to allow custom styling (bold)
+                        useHtml: true,
                         callbacks: {
+                            footer: function(tooltipItems) {
+                                // Calculate Total Waste and display as a footer with bold styling
+                                let total = 0;
+                                tooltipItems.forEach(function(tooltipItem) {
+                                    total += tooltipItem.raw || 0;
+                                });
+                                return `Total Waste: ${total.toFixed(2)} million tons`;
+                            },
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.raw.toFixed(2)} million tons`;
+                                let label = context.dataset.label || '';
+                                let value = context.raw || 0;
+                                if (label) {
+                                    label += ': ' + value.toFixed(2) + ' million tons';
+                                }
+                                return label;
                             }
                         }
                     },
@@ -163,31 +186,26 @@
                             padding: 10,
                             color: 'rgb(102, 102, 102)',
                             boxWidth: 20,
-                            boxHeight: 10,
-                            generateLabels: function(chart) {
-                                const defaultLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                                return defaultLabels.map(label => {
-                                    if (label.text === 'Total Waste') {
-                                        label.text = 'Total Waste (landfill, recycling, composting, combustion)';
-                                    }
-                                    return label;
-                                });
-                            }
+                            boxHeight: 10
                         }
                     }
                 },
                 scales: {
                     y: {
-                        stacked: false, // No stacking, just overlapping
+                        stacked: true, // Stack the datasets
                         beginAtZero: true,
+                        max: 350,      // Set max to slightly above the highest value (299.14)
                         title: { 
                             display: true, 
                             text: 'Million Tons', 
                             font: { size: 14, weight: 'bold' }
                         },
-                        ticks: { font: { size: 14 } },
+                        ticks: { 
+                            font: { size: 14 },
+                            stepSize: 50  // Adjust step size for better readability
+                        },
                         grid: { 
-                            borderDash: [5, 5], 
+                            borderDash: "dash", 
                             color: 'rgba(0, 0, 0, 0.1)',
                             drawTicks: false
                         }
