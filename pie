@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estimated U.S. Waste Management Market Share</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: "Inter", "Inter Placeholder", sans-serif;
+            font-size: 14px;
+            line-height: 20px;
+            color: rgb(102, 102, 102);
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem;
+            position: relative;
+            width: 100%;
+            min-height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+
+        .content.visible {
+            opacity: 1;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            color: rgb(102, 102, 102);
+            font-family: "Times New Roman", Times, serif;
+            align-self: flex-start;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+            margin-bottom: 0px;
+            align-self: flex-start;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 600px;
+            height: 450px;
+            margin-bottom: 0px;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .footnote {
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+            margin-top: 10px;
+            align-self: flex-start;
+        }
+
+        .footnote a {
+            color: rgb(102, 102, 102);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="content visible">
+        <div class="container">
+            <h1>Estimated U.S. Waste Management Market Share</h1>
+            <div class="subtitle">Estimated market share of publicly traded waste management companies based on trailing 12-month revenues.</div>
+            <div class="chart-container">
+                <svg id="pieChart" viewBox="0 0 600 600" width="500" height="500">
+                    <!-- Shifted the chart slightly to the left -->
+                    <g transform="translate(290, 300)">
+                        <g transform="rotate(-20)" id="rotatedGroup">
+                            <!-- Pie chart elements will be added here -->
+                        </g>
+                    </g>
+                    <g id="labelGroup">
+                        <!-- Labels and lines will be added here without rotation -->
+                    </g>
+                </svg>
+            </div>
+            <div class="footnote">Sources: <a href="https://csimarket.com/stocks/competitionSEG2.php?code=WM" target="_blank">CSIMarket</a>, <a href="https://einvestingforbeginners.com/publicly-traded-waste-management-industry-report-spring-2024-results-schil/" target="_blank">eInvesting</a>. <i>Data is an estimation based on available market analyses.</i></div>
+        </div>
+    </div>
+
+    <script>
+        const svg = document.getElementById('pieChart');
+        const rotatedGroup = svg.querySelector('#rotatedGroup');
+        const labelGroup = svg.querySelector('#labelGroup');
+
+        const centerX = 290; // Center X shifted to the left
+        const centerY = 300;
+        const radius = 180; // Slightly reduced radius for smaller chart
+
+        // Fixed percentages, colors, and labels
+        const slices = [
+            { percentage: 35, color: '#88C89A', label: 'Waste Management (35%)', labelOffset: 1.35, angleOffset: -5 }, // Green
+            { percentage: 26, color: '#6681C1', label: 'Republic Services (26%)', labelOffset: 1.35, angleOffset: 0 }, // Blue
+            { percentage: 39, color: '#EE7665', label: 'Everyone Else (39%)', labelOffset: 1.45, angleOffset: 35 }  
+        ];
+
+        function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+            const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+            return {
+                x: centerX + (radius * Math.cos(angleInRadians)),
+                y: centerY + (radius * Math.sin(angleInRadians))
+            };
+        }
+
+        function describeArc(x, y, radius, startAngle, endAngle) {
+            const start = polarToCartesian(x, y, radius, endAngle);
+            const end = polarToCartesian(x, y, radius, startAngle);
+            const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+            return [
+                "M", start.x, start.y,
+                "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+            ].join(" ");
+        }
+
+        function drawPieChart() {
+            rotatedGroup.innerHTML = ''; // Clear previous content in rotated group
+            labelGroup.innerHTML = ''; // Clear previous content in label group
+
+            // Add a background circle to prevent gaps
+            const backgroundCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            backgroundCircle.setAttribute("cx", 0);
+            backgroundCircle.setAttribute("cy", 0);
+            backgroundCircle.setAttribute("r", radius);
+            backgroundCircle.setAttribute("fill", slices[1].color); // Use the smallest slice's color (blue)
+            rotatedGroup.appendChild(backgroundCircle);
+
+            let currentAngle = 0;
+
+            slices.forEach((slice, index) => {
+                const sliceAngle = (slice.percentage / 100) * 360;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + sliceAngle;
+
+                // Draw the slice
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", `
+                    M 0 0
+                    L ${polarToCartesian(0, 0, radius, startAngle).x} ${polarToCartesian(0, 0, radius, startAngle).y}
+                    ${describeArc(0, 0, radius, startAngle, endAngle)}
+                    L 0 0
+                    Z
+                `);
+                path.setAttribute("fill", slice.color);
+                rotatedGroup.appendChild(path);
+
+                // Apply inside stroke only to the "Others" slice (index 2)
+                if (index === 2) {
+                    const insideStrokeArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    insideStrokeArc.setAttribute("d", describeArc(0, 0, radius, startAngle, endAngle));
+                    insideStrokeArc.setAttribute("stroke", "#f7f7f7"); // Match page background
+                    insideStrokeArc.setAttribute("stroke-width", 24); // Fixed 12-pixel inside stroke (doubled for effect)
+                    insideStrokeArc.setAttribute("stroke-linecap", "butt");
+                    insideStrokeArc.setAttribute("fill", "none");
+
+                    const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+                    clipPath.setAttribute("id", `sliceClip${index}`);
+                    const clipPathPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    clipPathPath.setAttribute("d", path.getAttribute("d"));
+                    clipPath.appendChild(clipPathPath);
+                    rotatedGroup.appendChild(clipPath);
+                    insideStrokeArc.setAttribute("clip-path", `url(#sliceClip${index})`);
+                    rotatedGroup.appendChild(insideStrokeArc);
+                }
+
+                // Apply outside stroke only to the "Others" slice (index 2)
+                if (index === 2) {
+                    const outsideStrokeArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    outsideStrokeArc.setAttribute("d", describeArc(0, 0, radius, startAngle, endAngle));
+                    outsideStrokeArc.setAttribute("stroke", "#f7f7f7"); // Match page background
+                    outsideStrokeArc.setAttribute("stroke-width", 2); // Fixed 2-pixel outside stroke
+                    outsideStrokeArc.setAttribute("stroke-linecap", "butt");
+                    outsideStrokeArc.setAttribute("fill", "none");
+                    rotatedGroup.appendChild(outsideStrokeArc);
+                }
+
+                currentAngle += sliceAngle;
+            });
+
+            // Add leader lines and labels to labelGroup
+            currentAngle = 0;
+            slices.forEach((slice, index) => {
+                const sliceAngle = (slice.percentage / 100) * 360;
+                const labelAngle = currentAngle + sliceAngle / 2; // Midpoint of the slice
+                const adjustedLabelAngle = labelAngle - 15 + (slice.angleOffset || 0); // Counteract the rotation + custom offset
+
+                // Starting point of the leader line (edge of the slice)
+                const lineStart = polarToCartesian(centerX, centerY, radius, adjustedLabelAngle);
+
+                // End point of the leader line (farther away from the chart)
+                const lineEnd = polarToCartesian(centerX, centerY, radius * slice.labelOffset, adjustedLabelAngle);
+
+                // Draw the leader line
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", lineStart.x);
+                line.setAttribute("y1", lineStart.y);
+                line.setAttribute("x2", lineEnd.x);
+                line.setAttribute("y2", lineEnd.y);
+                line.setAttribute("stroke", "rgb(102, 102, 102)"); // Match page text color
+                line.setAttribute("stroke-width", 1);
+                labelGroup.appendChild(line);
+
+                // Add label text with underline
+                const labelPosition = polarToCartesian(centerX, centerY, radius * slice.labelOffset + 25, adjustedLabelAngle);
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", labelPosition.x);
+                text.setAttribute("y", labelPosition.y);
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("dominant-baseline", "middle");
+                text.setAttribute("fill", "rgb(102, 102, 102)"); // Match page text color
+                text.setAttribute("font-family", '"Inter", sans-serif');
+                text.setAttribute("font-size", "19px");
+                text.setAttribute("font-weight", "bold"); // Make text bold
+
+                // Split label into company name and percentage, underline company name
+                const [company, percentage] = slice.label.split(' (');
+                const tspan1 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                tspan1.setAttribute("style", "text-decoration: underline;");
+                tspan1.textContent = company + ' (';
+                const tspan2 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                tspan2.textContent = percentage;
+                text.appendChild(tspan1);
+                text.appendChild(tspan2);
+                labelGroup.appendChild(text);
+
+                currentAngle += sliceAngle;
+            });
+        }
+
+        // Initial draw
+        drawPieChart();
+    </script>
+</body>
+</html>
