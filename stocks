@@ -3,53 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Percentage Return Chart</title>
+    <title>Stock Performance: SPX, RSG, and WM</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f7fa;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: "Inter", "Inter Placeholder", sans-serif;
+            font-size: 14px;
+            line-height: 20px;
+            color: rgb(102, 102, 102);
+            background-color: #f7f7f7;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
-        .chart-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+        .content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem; /* Reduced padding for a tighter layout */
+            width: 100%;
         }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 0 1rem;
+        }
+
         h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 2.5em;
+            margin-bottom: 8px;
+            font-size: 18px;
             font-weight: 600;
+            color: rgb(102, 102, 102);
+            font-family: "Times New Roman", Times, serif;
+            text-align: left; /* Align title to the left */
         }
+
+        .subtitle {
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+            margin-bottom: 20px;
+            text-align: left; /* Align subtitle to the left */
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
         canvas {
             width: 100% !important;
-            height: 700px !important;
+            height: 100% !important;
         }
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-            font-size: 0.9em;
+
+        .footnote {
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+            text-align: left; /* Align footnote to the left */
+            margin-top: 10px;
+        }
+
+        .custom-legend {
+            display: flex;
+            flex-direction: row; /* Stack legend items vertically for left alignment */
+            gap: 5px; /* Reduced gap for tighter layout */
+            margin-top: 10px;
+            text-align: left; /* Align legend items to the left */
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 10px;
+            margin-right: 5px;
+            border: 1px solid #ccc;
         }
     </style>
 </head>
 <body>
-    <div class="chart-container">
-        <h1>Stock Performance: SPX, RSG, and WM</h1>
-        <canvas id="stockChart"></canvas>
-        <div class="footer">
-            Percentage returns calculated from April 30, 2000 baseline
+    <div class="content">
+        <div class="container">
+            <h1>Stock Performance: SPX, RSG, and WM</h1>
+            <div class="subtitle">Percentage returns over time</div>
+            <div class="chart-container">
+                <canvas id="stockChart"></canvas>
+            </div>
+            <div class="custom-legend">
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #1e90ff;"></span>
+                    SPX % Return
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #32cd32;"></span>
+                    RSG % Return
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #ff4500;"></span>
+                    WM % Return
+                </div>
+            </div>
+            <div class="footnote">
+                Percentage returns calculated from June 30, 2010 baseline
+            </div>
         </div>
     </div>
 
     <script>
-        // Stock data from the new document
+        // Stock data with full dataset
         const stockData = [
             { time: 1275399000, spx: 1030.71, rsg: 29.73, wm: 31.28999 },
             { time: 1277991000, spx: 1101.6, rsg: 31.86, wm: 33.95 },
@@ -231,54 +305,70 @@
             { time: 1741012200, spx: 5572.08, rsg: 231.71, wm: 224.21 }
         ];
 
-        // Initial prices for percentage return calculation
-        const initialSpx = stockData[0].spx;
-        const initialRsg = stockData[0].rsg;
-        const initialWm = stockData[0].wm;
+        // Filter data to start from June 30, 2010 (timestamp: 1277991000)
+        const filteredStockData = stockData.filter(data => data.time >= 1277991000);
 
-        // Prepare data for Chart.js
-        const labels = stockData.map(data => new Date(data.time * 1000).toLocaleDateString());
-        const spxReturns = stockData.map(data => ((data.spx - initialSpx) / initialSpx * 100).toFixed(2));
-        const rsgReturns = stockData.map(data => ((data.rsg - initialRsg) / initialRsg * 100).toFixed(2));
-        const wmReturns = stockData.map(data => ((data.wm - initialWm) / initialWm * 100).toFixed(2));
+        // Initial prices for percentage return calculation (using June 30, 2010 as baseline)
+        const initialSpx = filteredStockData[0].spx; // Should be 1101.6
+        const initialRsg = filteredStockData[0].rsg; // Should be 31.86
+        const initialWm = filteredStockData[0].wm;   // Should be 33.95
+
+        console.log('Filtered Stock Data:', filteredStockData);
+        if (!filteredStockData || filteredStockData.length === 0) {
+            console.error('No data after filtering!');
+        }
+
+        // Prepare data for Chart.js with explicit x and y values
+        const spxData = filteredStockData.map(data => ({
+            x: new Date(data.time * 1000),
+            y: parseFloat(((data.spx - initialSpx) / initialSpx * 100).toFixed(2))
+        }));
+        const rsgData = filteredStockData.map(data => ({
+            x: new Date(data.time * 1000),
+            y: parseFloat(((data.rsg - initialRsg) / initialRsg * 100).toFixed(2))
+        }));
+        const wmData = filteredStockData.map(data => ({
+            x: new Date(data.time * 1000),
+            y: parseFloat(((data.wm - initialWm) / initialWm * 100).toFixed(2))
+        }));
+
+        console.log('SPX Data:', spxData);
+        console.log('RSG Data:', rsgData);
+        console.log('WM Data:', wmData);
 
         // Create the chart
-        const ctx = document.getElementById('stockChart').getContext('2d');
-        new Chart(ctx, {
+        const ctx = document.getElementById('stockChart');
+        if (!ctx) {
+            console.error('Canvas element not found!');
+        }
+        const chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels,
                 datasets: [
                     {
                         label: 'SPX % Return',
-                        data: spxReturns,
+                        data: spxData,
                         borderColor: '#1e90ff',
-                        backgroundColor: 'rgba(30, 144, 255, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#1e90ff',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
                         fill: false,
                         tension: 0.1
                     },
                     {
                         label: 'RSG % Return',
-                        data: rsgReturns,
+                        data: rsgData,
                         borderColor: '#32cd32',
-                        backgroundColor: 'rgba(50, 205, 50, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#32cd32',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
                         fill: false,
                         tension: 0.1
                     },
                     {
                         label: 'WM % Return',
-                        data: wmReturns,
+                        data: wmData,
                         borderColor: '#ff4500',
-                        backgroundColor: 'rgba(255, 69, 0, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#ff4500',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
                         fill: false,
                         tension: 0.1
                     }
@@ -286,75 +376,99 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false, // Allows custom height without distorting width
                 plugins: {
-                    title: {
-                        display: true,
-                        text: 'Percentage Return of SPX, RSG, and WM (Base: April 30, 2000)',
-                        font: {
-                            size: 22,
-                            weight: 'bold'
-                        },
-                        color: '#333',
-                        padding: 20
-                    },
                     legend: {
-                        position: 'top',
-                        labels: {
-                            font: {
-                                size: 14
-                            },
-                            padding: 20
-                        }
+                        display: false
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 12 },
-                        padding: 10
+                        enabled: false
                     }
                 },
                 scales: {
                     x: {
+                        type: 'time',
+                        time: {
+                            unit: 'year', // Changed to year for clearer labels
+                            displayFormats: {
+                                year: 'yyyy'
+                            }
+                        },
                         title: {
                             display: true,
-                            text: 'Date',
+                            text: 'Year',
                             font: {
-                                size: 16,
-                                weight: 'bold'
+                                size: 12,
+                                family: '"Inter", sans-serif',
+                                weight: '600'
                             },
-                            color: '#555'
+                            color: 'rgb(102, 102, 102)'
                         },
                         ticks: {
+                            source: 'data',
                             font: {
-                                size: 12
+                                size: 12,
+                                family: '"Inter", sans-serif'
                             },
-                            maxRotation: 45,
-                            minRotation: 45,
-                            maxTicksLimit: 20 // Limit number of x-axis labels for readability
+                            color: 'rgb(102, 102, 102)',
+                            callback: function(value, index, ticks) {
+                                const date = new Date(value);
+                                const year = date.getFullYear();
+                                // Show only odd years (2011, 2013, 2015, ..., 2025)
+                                return (year >= 2011 && year <= 2025 && year % 2 === 1) ? year : '';
+                            },
+                            maxTicksLimit: 20 // Increased to show more years
+                        },
+                        grid: {
+                            drawTicks: false,
+                            color: 'rgba(102, 102, 102, 0.05)', // Lighter grid lines
+                            lineWidth: 0.5 // Thinner grid lines
                         }
                     },
                     y: {
                         title: {
                             display: true,
-                            text: 'Percentage Return (%)',
+                            text: 'Percent Return (%)',
                             font: {
-                                size: 16,
-                                weight: 'bold'
+                                size: 12,
+                                family: '"Inter", sans-serif',
+                                weight: '600'
                             },
-                            color: '#555'
+                            color: 'rgb(102, 102, 102)'
                         },
+                        min: -25,
+                        max: 700,
                         ticks: {
                             font: {
-                                size: 12
+                                size: 12,
+                                family: '"Inter", sans-serif'
                             },
+                            color: 'rgb(102, 102, 102)',
+                            stepSize: 25, // Use a smaller step size to ensure ticks are generated
                             callback: function(value) {
-                                return value + '%';
+                                // Custom tick logic to show -25%, 0%, 50%, 150%, 250%, etc.
+                                if (value === -25 || value === 0 || value === 50) {
+                                    return value + '%';
+                                } else if (value > 50 && value % 100 === 0) { // Show every 100% after 50%
+                                    return value + '%';
+                                }
+                                return null; // Use null instead of empty string to hide unwanted ticks
                             }
+                        },
+                        grid: {
+                            color: 'rgba(102, 102, 102, 0.1)'
                         }
                     }
                 }
             }
         });
+
+        console.log('Chart created:', chart);
+        if (chart) {
+            console.log('Chart data:', chart.data);
+        } else {
+            console.error('Chart creation failed!');
+        }
     </script>
 </body>
 </html>
