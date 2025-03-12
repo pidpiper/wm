@@ -122,7 +122,7 @@
         const slices = [
             { percentage: 35, color: '#88C89A', label: 'Waste Management (35%)', labelOffset: 1.35, angleOffset: -5 }, // Green
             { percentage: 26, color: '#6681C1', label: 'Republic Services (26%)', labelOffset: 1.35, angleOffset: 0 }, // Blue
-            { percentage: 39, color: '#EE7665', label: 'Everyone Else (39%)', labelOffset: 1.45, angleOffset: 35 }  
+            { percentage: 39, color: '#EE7665', label: 'Rest of the Market (39%)', labelOffset: 1.45, angleOffset: 35 }  
         ];
 
         function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
