@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Percentage Return Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .chart-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            font-weight: 600;
+        }
+        canvas {
+            width: 100% !important;
+            height: 700px !important;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="chart-container">
+        <h1>Stock Performance: SPX, RSG, and WM</h1>
+        <canvas id="stockChart"></canvas>
+        <div class="footer">
+            Percentage returns calculated from April 30, 2000 baseline
+        </div>
+    </div>
+
+    <script>
+        // Stock data from the new document
+        const stockData = [
+            { time: 1275399000, spx: 1030.71, rsg: 29.73, wm: 31.28999 },
+            { time: 1277991000, spx: 1101.6, rsg: 31.86, wm: 33.95 },
+            { time: 1280755800, spx: 1049.33, rsg: 29.42999, wm: 33.09 },
+            { time: 1283347800, spx: 1141.2, rsg: 30.49001, wm: 35.74001 },
+            { time: 1285939800, spx: 1183.26, rsg: 29.81, wm: 35.72 },
+            { time: 1288618200, spx: 1180.55, rsg: 28.14, wm: 34.25 },
+            { time: 1291213800, spx: 1257.64, rsg: 29.86, wm: 36.87 },
+            { time: 1294065000, spx: 1286.12, rsg: 30.84, wm: 37.87 },
+            { time: 1296570600, spx: 1327.22, rsg: 29.61, wm: 37.06 },
+            { time: 1298989800, spx: 1325.83, rsg: 30.03999, wm: 37.34 },
+            { time: 1301664600, spx: 1363.61, rsg: 31.62, wm: 39.46001 },
+            { time: 1304343000, spx: 1345.2, rsg: 31.52, wm: 38.88 },
+            { time: 1306935000, spx: 1320.64, rsg: 30.85001, wm: 37.27 },
+            { time: 1309527000, spx: 1292.28, rsg: 29.03, wm: 31.49001 },
+            { time: 1312205400, spx: 1218.89, rsg: 30.36, wm: 33.03999 },
+            { time: 1314883800, spx: 1131.42, rsg: 28.06, wm: 32.56 },
+            { time: 1317648600, spx: 1253.3, rsg: 28.46001, wm: 32.92999 },
+            { time: 1320154200, spx: 1246.96, rsg: 27.45, wm: 31.3 },
+            { time: 1322749800, spx: 1257.6, rsg: 27.55, wm: 32.71001 },
+            { time: 1325601000, spx: 1312.41, rsg: 29.28, wm: 34.75999 },
+            { time: 1328106600, spx: 1365.68, rsg: 29.83, wm: 34.98 },
+            { time: 1330612200, spx: 1408.47, rsg: 30.56, wm: 34.96001 },
+            { time: 1333373400, spx: 1397.91, rsg: 27.37, wm: 34.2 },
+            { time: 1335879000, spx: 1310.33, rsg: 26.36, wm: 32.44 },
+            { time: 1338557400, spx: 1362.16, rsg: 26.46001, wm: 33.39999 },
+            { time: 1341235800, spx: 1379.32, rsg: 28.92999, wm: 34.39999 },
+            { time: 1343827800, spx: 1406.58, rsg: 27.64999, wm: 34.58 },
+            { time: 1346765400, spx: 1440.67, rsg: 27.50999, wm: 32.08 },
+            { time: 1349098200, spx: 1412.16, rsg: 28.35001, wm: 32.74001 },
+            { time: 1351776600, spx: 1416.18, rsg: 28.47, wm: 32.57001 },
+            { time: 1354545000, spx: 1426.19, rsg: 29.33, wm: 33.74001 },
+            { time: 1357137000, spx: 1498.11, rsg: 31.89, wm: 36.38 },
+            { time: 1359729000, spx: 1514.68, rsg: 31.44, wm: 37.32001 },
+            { time: 1362148200, spx: 1569.19, rsg: 33, wm: 39.21001 },
+            { time: 1364823000, spx: 1597.57, rsg: 34.08, wm: 40.98 },
+            { time: 1367415000, spx: 1630.74, rsg: 34.10001, wm: 41.92999 },
+            { time: 1370266200, spx: 1606.28, rsg: 33.94, wm: 40.33 },
+            { time: 1372685400, spx: 1685.73, rsg: 33.91, wm: 42.03 },
+            { time: 1375363800, spx: 1632.97, rsg: 32.50999, wm: 40.44 },
+            { time: 1378215000, spx: 1681.55, rsg: 33.36, wm: 41.24001 },
+            { time: 1380634200, spx: 1756.54, rsg: 33.47, wm: 43.54 },
+            { time: 1383312600, spx: 1805.81, rsg: 34.91, wm: 45.68 },
+            { time: 1385994600, spx: 1848.36, rsg: 33.2, wm: 44.87 },
+            { time: 1388673000, spx: 1782.59, rsg: 32.03, wm: 41.78 },
+            { time: 1391437800, spx: 1859.45, rsg: 34.11, wm: 41.5 },
+            { time: 1393857000, spx: 1872.34, rsg: 34.16, wm: 42.07 },
+            { time: 1396359000, spx: 1883.95, rsg: 35.09, wm: 44.45 },
+            { time: 1398951000, spx: 1923.57, rsg: 35.4, wm: 44.68 },
+            { time: 1401715800, spx: 1960.23, rsg: 37.97, wm: 44.73 },
+            { time: 1404221400, spx: 1930.67, rsg: 37.93, wm: 44.89 },
+            { time: 1406899800, spx: 2003.37, rsg: 39.33, wm: 46.97 },
+            { time: 1409664600, spx: 1972.29, rsg: 39.02, wm: 47.53 },
+            { time: 1412170200, spx: 2018.05, rsg: 38.4, wm: 48.89 },
+            { time: 1415025000, spx: 2067.56, rsg: 39.61, wm: 48.73 },
+            { time: 1417444200, spx: 2058.9, rsg: 40.25, wm: 51.32 },
+            { time: 1420209000, spx: 1994.99, rsg: 39.68, wm: 51.43 },
+            { time: 1422887400, spx: 2104.5, rsg: 40.92, wm: 54.48 },
+            { time: 1425306600, spx: 2067.89, rsg: 40.56, wm: 54.23 },
+            { time: 1427895000, spx: 2085.51, rsg: 40.63, wm: 49.53 },
+            { time: 1430487000, spx: 2107.39, rsg: 40.29, wm: 49.65 },
+            { time: 1433165400, spx: 2063.11, rsg: 39.17, wm: 46.35 },
+            { time: 1435757400, spx: 2103.84, rsg: 42.53, wm: 51.13 },
+            { time: 1438608600, spx: 1972.18, rsg: 40.98, wm: 50.06 },
+            { time: 1441114200, spx: 1920.03, rsg: 41.2, wm: 49.81 },
+            { time: 1443706200, spx: 2079.36, rsg: 43.74, wm: 53.76 },
+            { time: 1446474600, spx: 2080.41, rsg: 43.93, wm: 53.77 },
+            { time: 1448980200, spx: 2043.94, rsg: 43.99, wm: 53.37 },
+            { time: 1451917800, spx: 1940.24, rsg: 43.7, wm: 52.95 },
+            { time: 1454337000, spx: 1932.23, rsg: 45.7, wm: 55.85 },
+            { time: 1456842600, spx: 2059.74, rsg: 47.65, wm: 59 },
+            { time: 1459517400, spx: 2065.3, rsg: 47.07, wm: 58.79 },
+            { time: 1462195800, spx: 2096.96, rsg: 48.28, wm: 60.95 },
+            { time: 1464787800, spx: 2098.86, rsg: 51.31, wm: 66.27 },
+            { time: 1467379800, spx: 2173.6, rsg: 51.26, wm: 66.12 },
+            { time: 1470058200, spx: 2170.95, rsg: 50.52, wm: 63.94 },
+            { time: 1472736600, spx: 2168.27, rsg: 50.45, wm: 63.76 },
+            { time: 1475501400, spx: 2126.15, rsg: 52.63, wm: 65.66 },
+            { time: 1478007000, spx: 2198.81, rsg: 55.49, wm: 69.52 },
+            { time: 1480602600, spx: 2238.83, rsg: 57.05, wm: 70.91 },
+            { time: 1483453800, spx: 2278.87, rsg: 57.38, wm: 69.5 },
+            { time: 1485959400, spx: 2363.64, rsg: 61.95, wm: 73.32 },
+            { time: 1488378600, spx: 2362.72, rsg: 62.81, wm: 72.92 },
+            { time: 1491226200, spx: 2384.2, rsg: 62.99, wm: 72.78 },
+            { time: 1493645400, spx: 2411.8, rsg: 63.61, wm: 72.91 },
+            { time: 1496323800, spx: 2423.41, rsg: 63.73, wm: 73.35 },
+            { time: 1499088600, spx: 2470.3, rsg: 64.22, wm: 75.15 },
+            { time: 1501594200, spx: 2471.65, rsg: 65.24, wm: 77.11 },
+            { time: 1504272600, spx: 2519.36, rsg: 66.06, wm: 78.27 },
+            { time: 1506951000, spx: 2575.26, rsg: 65.07, wm: 82.17 },
+            { time: 1509543000, spx: 2647.58, rsg: 64.94, wm: 82.25 },
+            { time: 1512138600, spx: 2673.61, rsg: 67.61, wm: 86.3 },
+            { time: 1514903400, spx: 2823.81, rsg: 68.8, wm: 88.43 },
+            { time: 1517495400, spx: 2713.83, rsg: 67.18, wm: 86.32 },
+            { time: 1519914600, spx: 2640.87, rsg: 66.23, wm: 84.12 },
+            { time: 1522675800, spx: 2648.05, rsg: 64.68, wm: 81.29 },
+            { time: 1525181400, spx: 2705.27, rsg: 67.43, wm: 82.71 },
+            { time: 1527859800, spx: 2718.37, rsg: 68.36, wm: 81.34 },
+            { time: 1530538200, spx: 2816.29, rsg: 72.48, wm: 90 },
+            { time: 1533130200, spx: 2901.52, rsg: 73.36, wm: 90.9 },
+            { time: 1536067800, spx: 2913.98, rsg: 72.66, wm: 90.36 },
+            { time: 1538400600, spx: 2711.74, rsg: 72.68, wm: 89.47 },
+            { time: 1541079000, spx: 2760.17, rsg: 77.34, wm: 93.75 },
+            { time: 1543847400, spx: 2506.85, rsg: 72.09, wm: 88.99 },
+            { time: 1546439400, spx: 2704.1, rsg: 76.71, wm: 95.67 },
+            { time: 1549031400, spx: 2784.49, rsg: 78.43, wm: 101.25 },
+            { time: 1551450600, spx: 2834.4, rsg: 80.38, wm: 103.91 },
+            { time: 1554125400, spx: 2945.83, rsg: 82.82, wm: 107.34 },
+            { time: 1556717400, spx: 2752.06, rsg: 84.59, wm: 109.35 },
+            { time: 1559568600, spx: 2941.76, rsg: 86.64, wm: 115.37 },
+            { time: 1561987800, spx: 2980.38, rsg: 88.65, wm: 117 },
+            { time: 1564666200, spx: 2926.46, rsg: 89.25, wm: 119.35 },
+            { time: 1567517400, spx: 2976.74, rsg: 86.55, wm: 115 },
+            { time: 1569936600, spx: 3037.56, rsg: 87.51, wm: 112.21 },
+            { time: 1572615000, spx: 3140.98, rsg: 88.65, wm: 112.91 },
+            { time: 1575297000, spx: 3230.78, rsg: 89.63, wm: 113.96 },
+            { time: 1577975400, spx: 3225.52, rsg: 95.05, wm: 121.7 },
+            { time: 1580740200, spx: 2954.22, rsg: 90.26, wm: 110.81 },
+            { time: 1583159400, spx: 2584.59, rsg: 75.06, wm: 92.56 },
+            { time: 1585747800, spx: 2912.43, rsg: 78.34, wm: 100.02 },
+            { time: 1588339800, spx: 3044.31, rsg: 85.46, wm: 106.75 },
+            { time: 1591018200, spx: 3100.29, rsg: 82.05, wm: 105.91 },
+            { time: 1593610200, spx: 3271.12, rsg: 87.25, wm: 109.6 },
+            { time: 1596461400, spx: 3500.31, rsg: 92.72, wm: 114 },
+            { time: 1598967000, spx: 3363, rsg: 93.35, wm: 113.17 },
+            { time: 1601559000, spx: 3269.96, rsg: 88.17, wm: 107.91 },
+            { time: 1604327400, spx: 3621.63, rsg: 96.72, wm: 119.13 },
+            { time: 1606833000, spx: 3756.08, rsg: 96.3, wm: 117.93 },
+            { time: 1609770600, spx: 3714.25, rsg: 90.52, wm: 111.32 },
+            { time: 1612189800, spx: 3811.16, rsg: 89.09, wm: 110.89 },
+            { time: 1614609000, spx: 3972.9, rsg: 99.35, wm: 129.02 },
+            { time: 1617283800, spx: 4181.18, rsg: 106.3, wm: 137.97 },
+            { time: 1620048600, spx: 4204.12, rsg: 109.18, wm: 140.68 },
+            { time: 1622554200, spx: 4297.49, rsg: 110.01, wm: 140.11 },
+            { time: 1625146200, spx: 4395.27, rsg: 118.36, wm: 148.26 },
+            { time: 1627911000, spx: 4522.69, rsg: 124.13, wm: 155.11 },
+            { time: 1630503000, spx: 4307.53, rsg: 120.06, wm: 149.36 },
+            { time: 1633095000, spx: 4605.39, rsg: 134.6, wm: 160.23 },
+            { time: 1635773400, spx: 4567.01, rsg: 132.26, wm: 160.67 },
+            { time: 1638369000, spx: 4766.19, rsg: 139.45, wm: 166.9 },
+            { time: 1641220200, spx: 4515.54, rsg: 127.66, wm: 150.44 },
+            { time: 1643725800, spx: 4373.95, rsg: 120.28, wm: 144.4 },
+            { time: 1646145000, spx: 4530.42, rsg: 132.5, wm: 158.5 },
+            { time: 1648819800, spx: 4131.92, rsg: 134.27, wm: 164.44 },
+            { time: 1651498200, spx: 4132.16, rsg: 133.84, wm: 158.51 },
+            { time: 1654090200, spx: 3785.39, rsg: 130.87, wm: 152.98 },
+            { time: 1656682200, spx: 4130.289, rsg: 138.66, wm: 164.56 },
+            { time: 1659360600, spx: 3954.99, rsg: 142.72, wm: 169.03 },
+            { time: 1662039000, spx: 3585.61, rsg: 136.04, wm: 160.21 },
+            { time: 1664803800, spx: 3871.97, rsg: 132.62, wm: 158.37 },
+            { time: 1667309400, spx: 4080.11, rsg: 139.29, wm: 167.72 },
+            { time: 1669905000, spx: 3839.49, rsg: 128.99, wm: 156.88 },
+            { time: 1672756200, spx: 4076.59, rsg: 124.82, wm: 154.73 },
+            { time: 1675261800, spx: 3970.16, rsg: 128.93, wm: 149.76 },
+            { time: 1677681000, spx: 4109.32, rsg: 135.22, wm: 163.17 },
+            { time: 1680528600, spx: 4169.49, rsg: 144.62, wm: 166.05 },
+            { time: 1682947800, spx: 4179.84, rsg: 141.63, wm: 161.92 },
+            { time: 1685626200, spx: 4450.37, rsg: 153.17, wm: 173.42 },
+            { time: 1688391000, spx: 4588.97, rsg: 151.11, wm: 163.79 },
+            { time: 1690896600, spx: 4507.67, rsg: 144.13, wm: 156.78 },
+            { time: 1693575000, spx: 4288.04, rsg: 142.51, wm: 152.44 },
+            { time: 1696253400, spx: 4193.81, rsg: 148.49, wm: 164.33 },
+            { time: 1698845400, spx: 4567.81, rsg: 161.84, wm: 170.99 },
+            { time: 1701441000, spx: 4769.82, rsg: 164.91, wm: 179.1 },
+            { time: 1704205800, spx: 4845.66, rsg: 171.12, wm: 185.63 },
+            { time: 1706797800, spx: 5096.28, rsg: 183.6, wm: 205.65 },
+            { time: 1709303400, spx: 5254.34, rsg: 191.44, wm: 213.15 },
+            { time: 1711978200, spx: 5035.7, rsg: 191.7, wm: 208.02 },
+            { time: 1714570200, spx: 5277.5, rsg: 185.19, wm: 210.73 },
+            { time: 1717421400, spx: 5460.49, rsg: 194.34, wm: 213.34 },
+            { time: 1719840600, spx: 5522.29, rsg: 194.32, wm: 202.66 },
+            { time: 1722519000, spx: 5648.39, rsg: 208.21, wm: 212.04 },
+            { time: 1725370200, spx: 5762.49, rsg: 200.84, wm: 207.6 },
+            { time: 1727789400, spx: 5705.44, rsg: 198, wm: 215.85 },
+            { time: 1730467800, spx: 6032.39, rsg: 218.3, wm: 228.22 },
+            { time: 1733149800, spx: 5881.62, rsg: 201.18, wm: 201.79 },
+            { time: 1735828200, spx: 6040.52, rsg: 216.87, wm: 220.26 },
+            { time: 1738593000, spx: 5954.51, rsg: 237.02, wm: 232.78 },
+            { time: 1741012200, spx: 5572.08, rsg: 231.71, wm: 224.21 }
+        ];
+
+        // Initial prices for percentage return calculation
+        const initialSpx = stockData[0].spx;
+        const initialRsg = stockData[0].rsg;
+        const initialWm = stockData[0].wm;
+
+        // Prepare data for Chart.js
+        const labels = stockData.map(data => new Date(data.time * 1000).toLocaleDateString());
+        const spxReturns = stockData.map(data => ((data.spx - initialSpx) / initialSpx * 100).toFixed(2));
+        const rsgReturns = stockData.map(data => ((data.rsg - initialRsg) / initialRsg * 100).toFixed(2));
+        const wmReturns = stockData.map(data => ((data.wm - initialWm) / initialWm * 100).toFixed(2));
+
+        // Create the chart
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'SPX % Return',
+                        data: spxReturns,
+                        borderColor: '#1e90ff',
+                        backgroundColor: 'rgba(30, 144, 255, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#1e90ff',
+                        fill: false,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'RSG % Return',
+                        data: rsgReturns,
+                        borderColor: '#32cd32',
+                        backgroundColor: 'rgba(50, 205, 50, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#32cd32',
+                        fill: false,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'WM % Return',
+                        data: wmReturns,
+                        borderColor: '#ff4500',
+                        backgroundColor: 'rgba(255, 69, 0, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#ff4500',
+                        fill: false,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Percentage Return of SPX, RSG, and WM (Base: April 30, 2000)',
+                        font: {
+                            size: 22,
+                            weight: 'bold'
+                        },
+                        color: '#333',
+                        padding: 20
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 14
+                            },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 12 },
+                        padding: 10
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            color: '#555'
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            maxRotation: 45,
+                            minRotation: 45,
+                            maxTicksLimit: 20 // Limit number of x-axis labels for readability
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Percentage Return (%)',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            color: '#555'
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
