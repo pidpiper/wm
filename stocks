@@ -26,7 +26,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 2rem 1rem; /* Reduced padding for a tighter layout */
+            padding: 2rem 1rem;
             width: 100%;
         }
 
@@ -42,14 +42,14 @@
             font-weight: 600;
             color: rgb(102, 102, 102);
             font-family: "Times New Roman", Times, serif;
-            text-align: left; /* Align title to the left */
+            text-align: left;
         }
 
         .subtitle {
             font-size: 12px;
             color: rgb(102, 102, 102);
             margin-bottom: 20px;
-            text-align: left; /* Align subtitle to the left */
+            text-align: left;
         }
 
         .chart-container {
@@ -67,16 +67,16 @@
         .footnote {
             font-size: 12px;
             color: rgb(102, 102, 102);
-            text-align: left; /* Align footnote to the left */
+            text-align: left;
             margin-top: 10px;
         }
 
         .custom-legend {
             display: flex;
-            flex-direction: row; /* Stack legend items vertically for left alignment */
-            gap: 5px; /* Reduced gap for tighter layout */
+            flex-direction: row;
+            gap: 5px;
             margin-top: 10px;
-            text-align: left; /* Align legend items to the left */
+            text-align: left;
         }
 
         .legend-item {
@@ -92,6 +92,129 @@
             margin-right: 5px;
             border: 1px solid #ccc;
         }
+
+        /* Updated Segmented Control Styles */
+        .segmented-control {
+            --background: rgba(239, 239, 240, 1);
+            background: var(--background);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            padding: 1px;
+            border: none;
+            outline: none;
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: 1fr;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+            max-width: 300px;
+        }
+
+        .segmented-control .option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .segmented-control .option:hover input:not(:checked) + label span,
+        .segmented-control .option:active input:not(:checked) + label span,
+        .segmented-control .option:focus input:not(:checked) + label span {
+            opacity: 0.2;
+        }
+
+        .segmented-control .option:active input:not(:checked) + label span {
+            transform: scale(0.95);
+        }
+
+        .segmented-control .option label {
+            position: relative;
+            display: block;
+            text-align: center;
+            padding: 2px 4px;
+            background: rgba(255, 255, 255, 0);
+            font-weight: 500;
+            color: rgb(102, 102, 102);
+            font-size: 10px;
+            font-family: "Inter", sans-serif;
+            z-index: 2;
+        }
+
+        .segmented-control .option label::before,
+        .segmented-control .option label::after {
+            content: '';
+            width: 1px;
+            background: rgba(142, 142, 147, 0.15);
+            position: absolute;
+            top: 20%;
+            bottom: 20%;
+            border-radius: 10px;
+            will-change: background;
+            transition: background 0.2s ease;
+            z-index: 3;
+        }
+
+        .segmented-control .option label::before {
+            left: 0;
+            transform: translateX(-0.5px);
+        }
+
+        .segmented-control .option label::after {
+            right: 0;
+            transform: translateX(0.5px);
+        }
+
+        .segmented-control .option:first-of-type label::before {
+            opacity: 0;
+        }
+
+        .segmented-control .option:last-of-type label::after {
+            opacity: 0;
+        }
+
+        .segmented-control .option input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            outline: none;
+            border: none;
+            opacity: 0;
+        }
+
+        .segmented-control .selection {
+            background: rgba(255, 255, 255, 1);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12), 0 2px 1px 0 rgba(0, 0, 0, 0.04);
+            border-radius: 4px;
+            position: absolute;
+            top: 1px;
+            bottom: 1px;
+            left: 1px;
+            width: calc(33.33% - 2px);
+            z-index: 1;
+            will-change: transform;
+            transition: transform 0.2s ease;
+        }
+
+        .segmented-control .option input:checked + label {
+            cursor: default;
+        }
+
+        .segmented-control .option input:checked + label::before,
+        .segmented-control .option input:checked + label::after {
+            background: var(--background);
+        }
     </style>
 </head>
 <body>
@@ -99,6 +222,21 @@
         <div class="container">
             <h1>Stock Performance: SPX, RSG, and WM</h1>
             <div class="subtitle">Percentage returns over time</div>
+            <div class="segmented-control">
+                <span class="selection"></span>
+                <div class="option">
+                    <input type="radio" id="since2010" name="baseline" value="2010">
+                    <label for="since2010"><span>Since 2010</span></label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="since2014" name="baseline" value="2014" checked>
+                    <label for="since2014"><span>Since 2015</span></label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="since2020" name="baseline" value="2020">
+                    <label for="since2020"><span>Since 2020</span></label>
+                </div>
+            </div>
             <div class="chart-container">
                 <canvas id="stockChart"></canvas>
             </div>
@@ -116,14 +254,14 @@
                     WM % Return
                 </div>
             </div>
-            <div class="footnote">
-                Percentage returns calculated from June 30, 2010 baseline
+            <div class="footnote" id="footnote">
+                Percentage returns calculated from June 30, 2014 baseline
             </div>
         </div>
     </div>
 
     <script>
-        // Stock data with full dataset
+        // Stock data placeholder
         const stockData = [
             { time: 1275399000, spx: 1030.71, rsg: 29.73, wm: 31.28999 },
             { time: 1277991000, spx: 1101.6, rsg: 31.86, wm: 33.95 },
@@ -305,49 +443,52 @@
             { time: 1741012200, spx: 5572.08, rsg: 231.71, wm: 224.21 }
         ];
 
-        // Filter data to start from June 30, 2010 (timestamp: 1277991000)
-        const filteredStockData = stockData.filter(data => data.time >= 1277991000);
+        // Define baseline timestamps
+        const baselines = {
+            '2010': 1277991000, // June 30, 2010
+            '2014': 1404221400, // June 30, 2014
+            '2020': 1585747800  // March 31, 2020
+        };
 
-        // Initial prices for percentage return calculation (using June 30, 2010 as baseline)
-        const initialSpx = filteredStockData[0].spx; // Should be 1101.6
-        const initialRsg = filteredStockData[0].rsg; // Should be 31.86
-        const initialWm = filteredStockData[0].wm;   // Should be 33.95
-
-        console.log('Filtered Stock Data:', filteredStockData);
-        if (!filteredStockData || filteredStockData.length === 0) {
-            console.error('No data after filtering!');
+        // Function to format timestamp to readable date for footnote
+        function formatDate(timestamp) {
+            const date = new Date(timestamp * 1000);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
         }
 
-        // Prepare data for Chart.js with explicit x and y values
-        const spxData = filteredStockData.map(data => ({
-            x: new Date(data.time * 1000),
-            y: parseFloat(((data.spx - initialSpx) / initialSpx * 100).toFixed(2))
-        }));
-        const rsgData = filteredStockData.map(data => ({
-            x: new Date(data.time * 1000),
-            y: parseFloat(((data.rsg - initialRsg) / initialRsg * 100).toFixed(2))
-        }));
-        const wmData = filteredStockData.map(data => ({
-            x: new Date(data.time * 1000),
-            y: parseFloat(((data.wm - initialWm) / initialWm * 100).toFixed(2))
-        }));
+        // Function to prepare chart data based on selected baseline
+        function prepareChartData(baselineTimestamp) {
+            const filteredStockData = stockData.filter(data => data.time >= baselineTimestamp);
+            const initialSpx = filteredStockData[0].spx;
+            const initialRsg = filteredStockData[0].rsg;
+            const initialWm = filteredStockData[0].wm;
 
-        console.log('SPX Data:', spxData);
-        console.log('RSG Data:', rsgData);
-        console.log('WM Data:', wmData);
+            const spxData = filteredStockData.map(data => ({
+                x: new Date(data.time * 1000),
+                y: parseFloat(((data.spx - initialSpx) / initialSpx * 100).toFixed(2))
+            }));
+            const rsgData = filteredStockData.map(data => ({
+                x: new Date(data.time * 1000),
+                y: parseFloat(((data.rsg - initialRsg) / initialRsg * 100).toFixed(2))
+            }));
+            const wmData = filteredStockData.map(data => ({
+                x: new Date(data.time * 1000),
+                y: parseFloat(((data.wm - initialWm) / initialWm * 100).toFixed(2))
+            }));
+
+            return { spxData, rsgData, wmData };
+        }
 
         // Create the chart
         const ctx = document.getElementById('stockChart');
-        if (!ctx) {
-            console.error('Canvas element not found!');
-        }
         const chart = new Chart(ctx, {
             type: 'line',
             data: {
                 datasets: [
                     {
                         label: 'SPX % Return',
-                        data: spxData,
+                        data: [],
                         borderColor: '#1e90ff',
                         borderWidth: 1.5,
                         pointRadius: 0,
@@ -356,7 +497,7 @@
                     },
                     {
                         label: 'RSG % Return',
-                        data: rsgData,
+                        data: [],
                         borderColor: '#32cd32',
                         borderWidth: 1.5,
                         pointRadius: 0,
@@ -365,7 +506,7 @@
                     },
                     {
                         label: 'WM % Return',
-                        data: wmData,
+                        data: [],
                         borderColor: '#ff4500',
                         borderWidth: 1.5,
                         pointRadius: 0,
@@ -376,99 +517,124 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // Allows custom height without distorting width
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        enabled: false
-                    }
+                    legend: { display: false },
+                    tooltip: { enabled: false }
                 },
                 scales: {
                     x: {
                         type: 'time',
                         time: {
-                            unit: 'year', // Changed to year for clearer labels
-                            displayFormats: {
-                                year: 'yyyy'
-                            }
+                            unit: 'year',
+                            displayFormats: { year: 'yyyy' }
                         },
                         title: {
                             display: true,
                             text: 'Year',
-                            font: {
-                                size: 12,
-                                family: '"Inter", sans-serif',
-                                weight: '600'
-                            },
+                            font: { size: 12, family: '"Inter", sans-serif', weight: '600' },
                             color: 'rgb(102, 102, 102)'
                         },
                         ticks: {
                             source: 'data',
-                            font: {
-                                size: 12,
-                                family: '"Inter", sans-serif'
-                            },
+                            font: { size: 12, family: '"Inter", sans-serif' },
                             color: 'rgb(102, 102, 102)',
-                            callback: function(value, index, ticks) {
+                            callback: function(value) {
                                 const date = new Date(value);
                                 const year = date.getFullYear();
-                                // Show only odd years (2011, 2013, 2015, ..., 2025)
                                 return (year >= 2011 && year <= 2025 && year % 2 === 1) ? year : '';
                             },
-                            maxTicksLimit: 20 // Increased to show more years
+                            maxTicksLimit: 20
                         },
                         grid: {
                             drawTicks: false,
-                            color: 'rgba(102, 102, 102, 0.05)', // Lighter grid lines
-                            lineWidth: 0.5 // Thinner grid lines
+                            color: 'rgba(102, 102, 102, 0.05)',
+                            lineWidth: 0.5
                         }
                     },
                     y: {
                         title: {
                             display: true,
                             text: 'Percent Return (%)',
-                            font: {
-                                size: 12,
-                                family: '"Inter", sans-serif',
-                                weight: '600'
-                            },
+                            font: { size: 12, family: '"Inter", sans-serif', weight: '600' },
                             color: 'rgb(102, 102, 102)'
                         },
                         min: -25,
-                        max: 700,
+                        max: 600,
                         ticks: {
-                            font: {
-                                size: 12,
-                                family: '"Inter", sans-serif'
-                            },
+                            font: { size: 12, family: '"Inter", sans-serif' },
                             color: 'rgb(102, 102, 102)',
-                            stepSize: 25, // Use a smaller step size to ensure ticks are generated
+                            stepSize: 25,
                             callback: function(value) {
-                                // Custom tick logic to show -25%, 0%, 50%, 150%, 250%, etc.
                                 if (value === -25 || value === 0 || value === 50) {
                                     return value + '%';
-                                } else if (value > 50 && value % 100 === 0) { // Show every 100% after 50%
+                                } else if (value > 50 && value % 100 === 0) {
                                     return value + '%';
                                 }
-                                return null; // Use null instead of empty string to hide unwanted ticks
+                                return null;
                             }
                         },
-                        grid: {
-                            color: 'rgba(102, 102, 102, 0.1)'
-                        }
+                        grid: { color: 'rgba(102, 102, 102, 0.1)' }
                     }
                 }
             }
         });
 
-        console.log('Chart created:', chart);
-        if (chart) {
-            console.log('Chart data:', chart.data);
-        } else {
-            console.error('Chart creation failed!');
+        // Constants for segmented control
+        const SEGMENTED_CONTROL_BASE_SELECTOR = ".segmented-control";
+        const SEGMENTED_CONTROL_INDIVIDUAL_SEGMENT_SELECTOR = ".segmented-control .option input";
+        const SEGMENTED_CONTROL_BACKGROUND_PILL_SELECTOR = ".segmented-control .selection";
+
+        // Function to update pill position
+        function updatePillPosition() {
+            const inputs = document.querySelectorAll(SEGMENTED_CONTROL_INDIVIDUAL_SEGMENT_SELECTOR);
+            inputs.forEach((elem, index) => {
+                if (elem.checked) {
+                    const pill = document.querySelector(SEGMENTED_CONTROL_BACKGROUND_PILL_SELECTOR);
+                    pill.style.width = `${elem.offsetWidth - 2}px`;
+                    pill.style.transform = `translateX(${elem.offsetWidth * index + 1}px)`;
+                }
+            });
         }
+
+        // Function to update chart and footnote
+        function updateChart(baselineKey) {
+            const baselineTimestamp = baselines[baselineKey];
+            const { spxData, rsgData, wmData } = prepareChartData(baselineTimestamp);
+
+            chart.data.datasets[0].data = spxData;
+            chart.data.datasets[1].data = rsgData;
+            chart.data.datasets[2].data = wmData;
+
+            let newMax;
+            switch (baselineKey) {
+                case '2010': newMax = 700; break;
+                case '2014': newMax = 600; break;
+                case '2020': newMax = 300; break;
+                default: newMax = 600;
+            }
+            chart.options.scales.y.max = newMax;
+
+            chart.update();
+
+            const footnote = document.getElementById('footnote');
+            footnote.textContent = `Percentage returns calculated from ${formatDate(baselineTimestamp)} baseline`;
+        }
+
+        // Event listeners setup
+        document.addEventListener("DOMContentLoaded", () => {
+            const inputs = document.querySelectorAll(SEGMENTED_CONTROL_INDIVIDUAL_SEGMENT_SELECTOR);
+            inputs.forEach(input => {
+                input.addEventListener("change", () => {
+                    const baselineKey = input.value;
+                    updateChart(baselineKey);
+                    updatePillPosition();
+                });
+            });
+            window.addEventListener("resize", updatePillPosition);
+            updateChart('2014'); // Initial chart load set to 2015 baseline
+            updatePillPosition(); // Initial pill position
+        });
     </script>
 </body>
 </html>
