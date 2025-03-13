@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste Management Establishments: Private vs Local Govt (2005-2025)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: "Inter", "Inter Placeholder", sans-serif;
+            font-size: 14px;
+            line-height: 20px;
+            color: rgb(102, 102, 102);
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            padding: 5rem 1rem 2rem;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+
+        .content.visible {
+            opacity: 1;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding-right: 2rem;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            color: rgb(102, 102, 102);
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+            margin-bottom: 24px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            margin-bottom: 24px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .footnote {
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content visible">
+        <div class="container">
+            <h1>Waste Management Establishments: Private vs Local Govt (2005-2025)</h1>
+            <div class="subtitle">Source: U.S. Bureau of Labor Statistics, <a href="https://www.bls.gov/iag/tgs/iag562.htm" target="_blank">"Industries at a Glance: Waste Management and Remediation Services"</a> <i>Data encompasses 2005–2024, with 2025 values extrapolated based on linear trends.</i></div>
+            <div class="chart-container">
+                <canvas id="wasteManagementChart"></canvas>
+            </div>
+            <div class="footnote"><i>*The 2025 values are projections based on linear extrapolation using recent growth rates.</i></div>
+        </div>
+    </div>
+
+    <script>
+        // Years from 2005 to 2025
+        const years = [2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 
+                       2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, "2024*", "2025*"];
+
+        // Private establishments data (2005-2023 from data, 2024-2025 extrapolated)
+        const privateRawData = [21753, 22522, 23315, 23848, 23960, 24460, 25045, 26024, 26530, 26886, 
+                                27190, 27415, 27921, 28884, 29606, 30443, 31963, 33552, 35603];
+        const privateSlope = (35603 - 28884) / (2023 - 2018); // ~1343.8 per year
+        const private2024 = Math.round(35603 + privateSlope); // ~36947
+        const private2025 = Math.round(private2024 + privateSlope); // ~38291
+        const privateDataFull = [...privateRawData, private2024, private2025];
+
+        // Local govt establishments data (2005-2023 from data, 2024-2025 extrapolated)
+        const localGovRawData = [1160, 1169, 1173, 1162, 1153, 1151, 1159, 1150, 1155, 1154, 
+                                 1154, 1154, 1145, 1135, 1129, 1129, 1145, 1144, 1142];
+        const localTrendSlope = (1142 - 1169) / (2023 - 2006); // ~ -1.59 (long-term decline)
+        const local2024 = Math.round(1142 - 1.59); // ~1140
+        const local2025 = Math.round(local2024 - 1.59); // ~1139
+        const localGovDataFull = [...localGovRawData, local2024, local2025];
+
+        // Calculate percentage increase (base: 2005 for both)
+        const privateBase = 21753;
+        const localBase = 1160;
+        const privatePercent = privateDataFull.map(val => ((val - privateBase) / privateBase * 100));
+        const localPercent = localGovDataFull.map(val => ((val - localBase) / localBase * 100));
+
+        // Create the chart
+        const ctx = document.getElementById('wasteManagementChart').getContext('2d');
+        const wasteManagementChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: 'Private Establishments',
+                        data: privatePercent,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: false,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Local Government Establishments',
+                        data: localPercent,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: false,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: { 
+                            display: true, 
+                            text: 'Year', 
+                            font: { size: 14, weight: 'bold', family: '"Inter", sans-serif' }
+                        },
+                        ticks: {
+                            font: { size: 14, family: '"Inter", sans-serif' },
+                            callback: function(value, index) {
+                                const showYears = [2005, 2010, 2015, 2020, "2025*"];
+                                return showYears.includes(years[index]) ? years[index] : '';
+                            }
+                        },
+                        grid: { display: false }
+                    },
+                    y: {
+                        title: { 
+                            display: true, 
+                            text: 'Establishment Growth (%)', 
+                            font: { size: 14, weight: 'bold', family: '"Inter", sans-serif' }
+                        },
+                        ticks: {
+                            font: { size: 14, family: '"Inter", sans-serif' },
+                            values: [-10, 0, 10, 25, 50, 75]
+                        },
+                        min: -10,
+                        max: 80,
+                        grid: { 
+                            borderDash: "dash", 
+                            color: 'rgba(0, 0, 0, 0.1)',
+                            drawTicks: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        align: 'start',
+                        labels: { 
+                            font: { size: 14, family: '"Inter", sans-serif' },
+                            padding: 10,
+                            color: 'rgb(102, 102, 102)',
+                            boxWidth: 20,
+                            boxHeight: 10
+                        },
+                        onClick: function(e, legendItem, legend) {
+                            const index = legendItem.datasetIndex;
+                            const ci = this.chart;
+                            const meta = ci.getDatasetMeta(index);
+                            meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+
+                            // Adjust y-axis based on visible datasets
+                            const privateVisible = !ci.getDatasetMeta(0).hidden;
+                            const localVisible = !ci.getDatasetMeta(1).hidden;
+
+                            if (privateVisible && localVisible) {
+                                ci.options.scales.y.min = -10;
+                                ci.options.scales.y.max = 80;
+                                ci.options.scales.y.ticks.values = [-10, 0, 10, 25, 50, 75];
+                            } else if (localVisible && !privateVisible) {
+                                ci.options.scales.y.min = -4;
+                                ci.options.scales.y.max = 4;
+                                ci.options.scales.y.ticks.values = [-4, -2, 0, 2, 4];
+                            } else if (privateVisible && !localVisible) {
+                                ci.options.scales.y.min = -10;
+                                ci.options.scales.y.max = 80;
+                                ci.options.scales.y.ticks.values = [-10, 0, 10, 25, 50, 75];
+                            }
+                            ci.update();
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const datasetLabel = context.dataset.label;
+                                const year = years[context.dataIndex];
+                                const rawValue = datasetLabel === 'Private Establishments' ? 
+                                    privateDataFull[context.dataIndex] : localGovDataFull[context.dataIndex];
+                                const percent = context.parsed.y.toFixed(1);
+                                return `${datasetLabel}: ${percent}% (${rawValue} establishments)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
