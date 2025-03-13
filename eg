@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cumulative Employment Growth: Multiple Sectors (1990-2025)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: "Inter", "Inter Placeholder", sans-serif;
+            font-size: 14px;
+            line-height: 20px;
+            color: rgb(102, 102, 102);
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            padding: 5rem 1rem 2rem;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+
+        .content.visible {
+            opacity: 1;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding-right: 2rem;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            color: rgb(102, 102, 102);
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+            margin-bottom: 24px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            margin-bottom: 24px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .footnote {
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content visible">
+        <div class="container">
+            <h1>Cumulative Employment Growth: Multiple Sectors (1990-2025)</h1>
+            <div class="subtitle">Source: U.S. Bureau of Labor Statistics, <a href="https://www.bls.gov/ces/" target="_blank">"Current Employment Statistics"</a> <i>Data encompasses 1990–2024, with 2025 values based on partial data (Jan-Feb).</i></div>
+            <div class="chart-container">
+                <canvas id="employmentChart"></canvas>
+            </div>
+            <div class="footnote"><i>*The 2025 values are based on January-February averages for Service-providing and Professional Services; PAYEMS and NAICS 562 use original projections.</i></div>
+        </div>
+    </div>
+
+    <script>
+        const years = [
+            '1990', '1991', '1992', '1993', '1994', '1995', '1996', '1997', '1998', '1999', '2000',
+            '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010',
+            '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020',
+            '2021', '2022', '2023', '2024', '2025'
+        ];
+
+        const payemsCumulativeGrowth = [
+            0.000, -0.807, -0.347, 1.515, 4.725, 7.460, 9.704, 12.363, 15.314, 17.909, 20.288,
+            20.134, 18.863, 18.684, 20.118, 22.285, 24.458, 25.905, 25.168, 19.933, 19.175,
+            20.529, 22.385, 24.320, 26.941, 29.446, 31.837, 34.200, 36.565, 38.564, 34.715,
+            38.462, 44.340, 47.672, 49.705, 51.650
+        ];
+
+        const naics562CumulativeGrowth = [
+            0.000, 1.330, 3.429, 8.833, 13.848, 18.947, 22.802, 26.297, 30.559, 34.949, 36.560,
+            38.042, 37.878, 39.461, 42.836, 46.723, 50.606, 53.409, 53.980, 52.728, 55.966,
+            59.473, 61.904, 63.893, 66.965, 71.645, 76.202, 81.681, 91.135, 97.921, 98.522,
+            104.255, 114.675, 123.309, 131.856, 138.052
+        ];
+
+        const serviceProvidingGrowth = [
+            0.000, -0.001, 1.042, 3.429, 6.696, 9.907, 12.328, 15.157, 18.074, 21.068, 24.141,
+            25.564, 25.652, 26.390, 27.986, 30.015, 32.251, 34.297, 34.951, 31.098, 31.197,
+            32.717, 34.408, 36.198, 38.524, 40.893, 43.306, 45.458, 47.577, 49.594, 42.178,
+            45.524, 51.541, 55.687, 58.341, 60.105
+        ];
+
+        const profBusinessGrowth = [
+            0.000, -1.237, 1.140, 6.231, 12.842, 19.776, 25.614, 32.858, 40.344, 47.500, 53.518,
+            51.759, 46.404, 47.803, 51.964, 56.858, 62.405, 65.539, 62.318, 53.154, 55.506,
+            59.517, 63.982, 68.594, 72.682, 77.374, 81.257, 85.354, 89.680, 92.505, 84.105,
+            95.443, 106.374, 108.319, 107.278, 107.151
+        ];
+
+        const ctx = document.getElementById('employmentChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: 'Waste Management (NAICS 562)',
+                        data: naics562CumulativeGrowth,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: false,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Total Nonfarm (PAYEMS)',
+                        data: payemsCumulativeGrowth,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: false,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Service-providing',
+                        data: serviceProvidingGrowth,
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        fill: false,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Professional & Business Services',
+                        data: profBusinessGrowth,
+                        borderColor: 'rgb(255, 159, 64)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                        fill: false,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        right: 30 // Add padding to prevent cutoff of "2025"
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { 
+                            display: true, 
+                            text: 'Year', 
+                            font: { size: 14, weight: 'bold', family: '"Inter", sans-serif' }
+                        },
+                        ticks: {
+                            font: { 
+                                size: 14, 
+                                family: '"Inter", sans-serif', 
+                                style: 'italic' // Italicize the labels
+                            },
+                            autoSkip: false,
+                            maxTicksLimit: 9,
+                            callback: function(value, index) {
+                                const showYears = ['1990', '1995', '2000', '2005', '2010', '2015', '2020', '2025'];
+                                return showYears.includes(years[index]) ? years[index] : '';
+                            },
+                            rotation: 45 // Skew the labels by 45 degrees
+                        },
+                        grid: { display: false }
+                    },
+                    y: {
+                        title: { 
+                            display: true, 
+                            text: 'Employment Growth (%)', 
+                            font: { size: 14, weight: 'bold', family: '"Inter", sans-serif' }
+                        },
+                        ticks: {
+                            font: { size: 14, family: '"Inter", sans-serif' },
+                            values: [-20, 0, 25, 50, 75, 100, 125, 150]
+                        },
+                        min: -10,
+                        max: 140,
+                        grid: { 
+                            borderDash: [5, 5], 
+                            color: 'rgba(0, 0, 0, 0.1)',
+                            drawTicks: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        align: 'start',
+                        labels: { 
+                            font: { size: 14, family: '"Inter", sans-serif' },
+                            padding: 10,
+                            color: 'rgb(102, 102, 102)',
+                            boxWidth: 20,
+                            boxHeight: 10
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const datasetLabel = context.dataset.label;
+                                const year = years[context.dataIndex];
+                                const percent = context.parsed.y.toFixed(1);
+                                return `${datasetLabel}: ${percent}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
