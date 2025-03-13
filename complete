@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U.S. Waste Management Overview</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: "Inter", "Inter Placeholder", sans-serif;
+            font-size: 14px;
+            line-height: 20px;
+            color: rgb(102, 102, 102);
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+
+        .content.visible {
+            opacity: 1;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 0 1rem;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            color: rgb(102, 102, 102);
+            font-family: "Times New Roman", Times, serif;
+            text-align: left;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            margin-bottom: 24px;
+        }
+
+        canvas, svg {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+
+        .footnote {
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .footnote a {
+            color: rgb(102, 102, 102);
+            text-decoration: underline;
+        }
+
+        /* Pie Chart Specific Styles */
+        #marketSharePieChart {
+            max-width: 600px;
+            max-height: 450px;
+        }
+
+        /* Stock Performance Segmented Control Styles */
+        .segmented-control {
+    --background: rgba(239, 239, 240, 1);
+    background: var(--background);
+    border-radius: 6px;
+    margin-bottom: 20px;
+    padding: 1px;
+    border: none;
+    outline: none;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    max-width: 300px;
+}
+
+.segmented-control .option {
+    position: relative;
+    cursor: pointer;
+}
+
+.segmented-control .option:hover input:not(:checked) + label span,
+.segmented-control .option:active input:not(:checked) + label span {
+    opacity: 0.2;
+}
+
+.segmented-control .option:active input:not(:checked) + label span {
+    transform: scale(0.95);
+}
+
+.segmented-control .option label {
+    display: block;
+    text-align: center;
+    padding: 2px 4px;
+    font-weight: 500;
+    color: rgb(102, 102, 102);
+    font-size: 10px;
+    font-family: "Inter", sans-serif;
+    z-index: 3; /* Increased from 2 to 3 to ensure labels are above the pill */
+    position: relative; /* Ensure labels establish their own stacking context */
+}
+
+.segmented-control .option label::before,
+.segmented-control .option label::after {
+    content: '';
+    width: 1px;
+    background: rgba(142, 142, 147, 0.15);
+    position: absolute;
+    top: 20%;
+    bottom: 20%;
+    border-radius: 10px;
+    transition: background 0.2s ease;
+    z-index: 3; /* Match the label's z-index */
+}
+
+.segmented-control .option label::before {
+    left: 0;
+    transform: translateX(-0.5px);
+}
+
+.segmented-control .option label::after {
+    right: 0;
+    transform: translateX(0.5px);
+}
+
+.segmented-control .option:first-of-type label::before,
+.segmented-control .option:last-of-type label::after {
+    opacity: 0;
+}
+
+.segmented-control .option input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    appearance: none;
+    outline: none;
+    border: none;
+    opacity: 0;
+}
+
+.segmented-control .selection {
+    background: rgba(255, 255, 255, 1);
+    border: 0.5px solid rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12), 0 2px 1px 0 rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+    position: absolute;
+    top: 1px;
+    bottom: 1px;
+    left: 1px;
+    width: calc(33.33% - 2px);
+    z-index: 1; /* Keep at 1, as labels now have z-index 3 */
+    transition: transform 0.2s ease;
+}
+
+.segmented-control .option input:checked + label::before,
+.segmented-control .option input:checked + label::after {
+    background: var(--background);
+}
+
+        .custom-legend {
+            display: flex;
+            flex-direction: row;
+            gap: 5px;
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: rgb(102, 102, 102);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 10px;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="content visible">
+        <!-- 1. U.S. Waste Generation and Recycling -->
+        <div class="container">
+            <h1>U.S. Waste Generation and Recycling (1960-2025)</h1>
+            <div class="subtitle">Source: The U.S. Environmental Protection Agency. <a href="https://www.epa.gov/facts-and-figures-about-materials-waste-and-recycling/national-overview-facts-and-figures-materials" target="_blank">"National Overview: Facts and Figures on Materials, Wastes and Recycling"</a>. <i>Data encompasses 1960–2018 and excludes hazardous materials.</i></div>
+            <div class="chart-container">
+                <canvas id="wasteChart"></canvas>
+            </div>
+            <div class="footnote"><i>*The 2020 and 2025 values are projections based on linear extrapolation using five-year interval growth rates.</i></div>
+        </div>
+
+        <!-- 2. Waste Management Establishments: Private vs Local Govt -->
+        <div class="container">
+            <h1>Waste Management Establishments: Private vs Local Govt (2005-2025)</h1>
+            <div class="subtitle">Source: U.S. Bureau of Labor Statistics, <a href="https://www.bls.gov/iag/tgs/iag562.htm" target="_blank">"Industries at a Glance: Waste Management and Remediation Services"</a>. <i>Data encompasses 2005–2024, with 2025 values extrapolated based on linear trends.</i></div>
+            <div class="chart-container">
+                <canvas id="establishmentsChart"></canvas>
+            </div>
+            <div class="footnote"><i>*The 2025 values are projections based on linear extrapolation using recent growth rates.</i></div>
+        </div>
+
+        <!-- 3. Cumulative Employment Growth: Multiple Sectors -->
+        <div class="container">
+            <h1>Cumulative Employment Growth: Multiple Sectors (1990-2025)</h1>
+            <div class="subtitle">Source: U.S. Bureau of Labor Statistics, <a href="https://www.bls.gov/ces/" target="_blank">"Current Employment Statistics"</a>. <i>Data encompasses 1990–2024, with 2025 values based on partial data (Jan-Feb).</i></div>
+            <div class="chart-container">
+                <canvas id="employmentChart"></canvas>
+            </div>
+            <div class="footnote"><i>*The 2025 values are based on January-March averages.</i></div>
+        </div>
+
+        <!-- 4. Estimated U.S. Waste Management Market Share -->
+        <div class="container">
+            <h1>Estimated U.S. Waste Management Market Share</h1>
+            <div class="subtitle">Estimated market share of publicly traded waste management companies based on trailing 12-month revenues.</div>
+            <div class="chart-container">
+                <svg id="marketSharePieChart" viewBox="0 0 600 600" width="600" height="600">
+                    <g transform="translate(290, 300)">
+                        <g transform="rotate(-20)" id="pieRotatedGroup"></g>
+                    </g>
+                    <g id="pieLabelGroup"></g>
+                </svg>
+            </div>
+            <div class="footnote">Sources: <a href="https://csimarket.com/stocks/competitionSEG2.php?code=WM" target="_blank">CSIMarket</a>, <a href="https://einvestingforbeginners.com/publicly-traded-waste-management-industry-report-spring-2024-results-schil/" target="_blank">eInvesting</a>. <i>Data is an estimation based on available market analyses.</i></div>
+        </div>
+
+        <!-- 5. Stock Performance: SPX, RSG, and WM -->
+        <div class="container">
+            <h1>Stock Performance: SPX, RSG, and WM</h1>
+            <div class="subtitle">Percentage returns over time</div>
+            <div class="segmented-control">
+                <span class="selection"></span>
+                <div class="option">
+                    <input type="radio" id="since2010" name="baseline" value="2010">
+                    <label for="since2010"><span>Since 2010</span></label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="since2014" name="baseline" value="2014" checked>
+                    <label for="since2014"><span>Since 2015</span></label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="since2020" name="baseline" value="2020">
+                    <label for="since2020"><span>Since 2020</span></label>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="stockChart"></canvas>
+            </div>
+            <div class="custom-legend">
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #1e90ff;"></span>SPX % Return
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #32cd32;"></span>RSG % Return
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #ff4500;"></span>WM % Return
+                </div>
+            </div>
+            <div class="footnote" id="stockFootnote">Percentage returns calculated from June 30, 2014 baseline</div>
+        </div>
+    </div>
+
+    <script>
+        // 1. U.S. Waste Generation and Recycling Chart
+        const wasteYears = [1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, "2020*", "2025*"];
+        const landfillData = [82.51, 97.55, 112.59, 123.48, 134.36, 139.82, 145.27, 142.77, 140.26, 142.29, 136.31, 137.61, 151.31, 161.70];
+        const recyclingData = [5.61, 6.82, 8.02, 11.27, 14.52, 21.78, 29.04, 41.03, 53.01, 59.24, 65.26, 67.56, 70.27, 72.63];
+        const compostingData = [0.00, 0.00, 0.00, 0.00, 0.00, 2.10, 4.20, 10.33, 16.45, 20.55, 20.17, 23.39, 26.01, 28.25];
+        const combustionData = [0.00, 0.23, 0.45, 1.61, 2.76, 16.26, 29.76, 31.75, 33.73, 31.65, 29.31, 33.55, 35.22, 36.56];
+
+        const wasteCtx = document.getElementById('wasteChart').getContext('2d');
+        new Chart(wasteCtx, {
+            type: 'line',
+            data: {
+                labels: wasteYears,
+                datasets: [
+                    { label: 'Landfill', data: landfillData, backgroundColor: 'rgb(135, 165, 185)', borderColor: 'rgb(100, 130, 150)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 },
+                    { label: 'Recycling', data: recyclingData, backgroundColor: 'rgb(50, 150, 50)', borderColor: 'rgb(0, 100, 0)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 },
+                    { label: 'Combustion with Energy Recovery', data: combustionData, backgroundColor: 'rgb(220, 20, 60)', borderColor: 'rgb(180, 10, 40)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 },
+                    { label: 'Composting', data: compostingData, backgroundColor: 'rgb(255, 215, 0)', borderColor: 'rgb(205, 165, 0)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            footer: (items) => `Total Waste: ${items.reduce((sum, item) => sum + (item.raw || 0), 0).toFixed(2)} million tons`,
+                            label: (context) => `${context.dataset.label}: ${context.raw.toFixed(2)} million tons`
+                        }
+                    },
+                    legend: { position: 'bottom', align: 'start', labels: { font: { size: 14 }, padding: 10, color: 'rgb(102, 102, 102)', boxWidth: 20, boxHeight: 10 } }
+                },
+                scales: {
+                    y: { stacked: true, beginAtZero: true, max: 350, title: { display: true, text: 'Million Tons', font: { size: 14, weight: 'bold' } }, ticks: { font: { size: 14 }, stepSize: 50 }, grid: { borderDash: [5, 5], color: 'rgba(0, 0, 0, 0.1)', drawTicks: false } },
+                    x: { title: { display: true, text: 'Year', font: { size: 14, weight: 'bold' } }, ticks: { font: { size: 14 } }, grid: { display: false } }
+                }
+            }
+        });
+
+        // 2. Waste Management Establishments: Private vs Local Govt Chart
+        const estabYears = [2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, "2024*", "2025*"];
+        const privateRawData = [21753, 22522, 23315, 23848, 23960, 24460, 25045, 26024, 26530, 26886, 27190, 27415, 27921, 28884, 29606, 30443, 31963, 33552, 35603];
+        const privateSlope = (35603 - 28884) / (2023 - 2018);
+        const privateDataFull = [...privateRawData, Math.round(35603 + privateSlope), Math.round(35603 + 2 * privateSlope)];
+        const localGovRawData = [1160, 1169, 1173, 1162, 1153, 1151, 1159, 1150, 1155, 1154, 1154, 1154, 1145, 1135, 1129, 1129, 1145, 1144, 1142];
+        const localSlope = (1142 - 1169) / (2023 - 2006);
+        const localGovDataFull = [...localGovRawData, Math.round(1142 - localSlope), Math.round(1142 - 2 * localSlope)];
+        const privatePercent = privateDataFull.map(val => ((val - 21753) / 21753 * 100));
+        const localPercent = localGovDataFull.map(val => ((val - 1160) / 1160 * 100));
+
+        const estabCtx = document.getElementById('establishmentsChart').getContext('2d');
+        const establishmentsChart = new Chart(estabCtx, {
+            type: 'line',
+            data: {
+                labels: estabYears,
+                datasets: [
+                    { label: 'Private Establishments', data: privatePercent, borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.2)', fill: false, tension: 0.1 },
+                    { label: 'Local Government Establishments', data: localPercent, borderColor: 'rgb(255, 99, 132)', backgroundColor: 'rgba(255, 99, 132, 0.2)', fill: false, tension: 0.1 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { title: { display: true, text: 'Year', font: { size: 14, weight: 'bold' } }, ticks: { font: { size: 14 }, callback: (val, idx) => [2005, 2010, 2015, 2020, "2025*"].includes(estabYears[idx]) ? estabYears[idx] : '' }, grid: { display: false } },
+                    y: { title: { display: true, text: 'Establishment Growth (%)', font: { size: 14, weight: 'bold' } }, ticks: { font: { size: 14 }, values: [-10, 0, 10, 25, 50, 75] }, min: -10, max: 80, grid: { borderDash: [5, 5], color: 'rgba(0, 0, 0, 0.1)', drawTicks: false } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', align: 'start', labels: { font: { size: 14 }, padding: 10, color: 'rgb(102, 102, 102)', boxWidth: 20, boxHeight: 10 }, onClick: (e, legendItem, legend) => {
+                        const index = legendItem.datasetIndex;
+                        const meta = legend.chart.getDatasetMeta(index);
+                        meta.hidden = meta.hidden === null ? !legend.chart.data.datasets[index].hidden : null;
+                        const privateVisible = !legend.chart.getDatasetMeta(0).hidden;
+                        const localVisible = !legend.chart.getDatasetMeta(1).hidden;
+                        if (privateVisible && localVisible) {
+                            legend.chart.options.scales.y.min = -10;
+                            legend.chart.options.scales.y.max = 80;
+                            legend.chart.options.scales.y.ticks.values = [-10, 0, 10, 25, 50, 75];
+                        } else if (localVisible) {
+                            legend.chart.options.scales.y.min = -4;
+                            legend.chart.options.scales.y.max = 4;
+                            legend.chart.options.scales.y.ticks.values = [-4, -2, 0, 2, 4];
+                        } else if (privateVisible) {
+                            legend.chart.options.scales.y.min = -10;
+                            legend.chart.options.scales.y.max = 80;
+                            legend.chart.options.scales.y.ticks.values = [-10, 0, 10, 25, 50, 75];
+                        }
+                        legend.chart.update();
+                    } },
+                    tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(1)}% (${(context.dataset.label === 'Private Establishments' ? privateDataFull : localGovDataFull)[context.dataIndex]} establishments)` } }
+                }
+            }
+        });
+
+        // 3. Cumulative Employment Growth Chart
+        const empYears = ['1990', '1991', '1992', '1993', '1994', '1995', '1996', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'];
+        const payemsData = [0.000, -0.807, -0.347, 1.515, 4.725, 7.460, 9.704, 12.363, 15.314, 17.909, 20.288, 20.134, 18.863, 18.684, 20.118, 22.285, 24.458, 25.905, 25.168, 19.933, 19.175, 20.529, 22.385, 24.320, 26.941, 29.446, 31.837, 34.200, 36.565, 38.564, 34.715, 38.462, 44.340, 47.672, 49.705, 51.650];
+        const naics562Data = [0.000, 1.330, 3.429, 8.833, 13.848, 18.947, 22.802, 26.297, 30.559, 34.949, 36.560, 38.042, 37.878, 39.461, 42.836, 46.723, 50.606, 53.409, 53.980, 52.728, 55.966, 59.473, 61.904, 63.893, 66.965, 71.645, 76.202, 81.681, 91.135, 97.921, 98.522, 104.255, 114.675, 123.309, 131.856, 138.052];
+        const serviceData = [0.000, -0.001, 1.042, 3.429, 6.696, 9.907, 12.328, 15.157, 18.074, 21.068, 24.141, 25.564, 25.652, 26.390, 27.986, 30.015, 32.251, 34.297, 34.951, 31.098, 31.197, 32.717, 34.408, 36.198, 38.524, 40.893, 43.306, 45.458, 47.577, 49.594, 42.178, 45.524, 51.541, 55.687, 58.341, 60.105];
+        const profData = [0.000, -1.237, 1.140, 6.231, 12.842, 19.776, 25.614, 32.858, 40.344, 47.500, 53.518, 51.759, 46.404, 47.803, 51.964, 56.858, 62.405, 65.539, 62.318, 53.154, 55.506, 59.517, 63.982, 68.594, 72.682, 77.374, 81.257, 85.354, 89.680, 92.505, 84.105, 95.443, 106.374, 108.319, 107.278, 107.151];
+
+        const empCtx = document.getElementById('employmentChart').getContext('2d');
+        new Chart(empCtx, {
+            type: 'line',
+            data: {
+                labels: empYears,
+                datasets: [
+                    { label: 'Waste Management', data: naics562Data, borderColor: 'rgb(255, 99, 132)', backgroundColor: 'rgba(255, 99, 132, 0.2)', fill: false, tension: 0.1 },
+                    { label: 'Total Nonfarm (PAYEMS)', data: payemsData, borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.2)', fill: false, tension: 0.1 },
+                    { label: 'Service-providing', data: serviceData, borderColor: 'rgb(54, 162, 235)', backgroundColor: 'rgba(54, 162, 235, 0.2)', fill: false, tension: 0.1 },
+                    { label: 'Professional & Business Services', data: profData, borderColor: 'rgb(255, 159, 64)', backgroundColor: 'rgba(255, 159, 64, 0.2)', fill: false, tension: 0.1 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { right: 30 } },
+                scales: {
+                    x: { title: { display: true, text: 'Year', font: { size: 14, weight: 'bold' } }, ticks: { font: { size: 14, style: 'italic' }, autoSkip: false, maxTicksLimit: 9, callback: (val, idx) => ['1990', '1995', '2000', '2005', '2010', '2015', '2020', '2025'].includes(empYears[idx]) ? empYears[idx] : '', rotation: 45 }, grid: { display: false } },
+                    y: { title: { display: true, text: 'Employment Growth (%)', font: { size: 14, weight: 'bold' } }, ticks: { font: { size: 14 }, values: [-20, 0, 25, 50, 75, 100, 125, 150] }, min: -10, max: 140, grid: { borderDash: [5, 5], color: 'rgba(0, 0, 0, 0.1)', drawTicks: false } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', align: 'start', labels: { font: { size: 14 }, padding: 10, color: 'rgb(102, 102, 102)', boxWidth: 20, boxHeight: 10 } },
+                    tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%` } }
+                }
+            }
+        });
+
+        // 4. Estimated U.S. Waste Management Market Share Pie Chart
+        const pieSvg = document.getElementById('marketSharePieChart');
+        const pieRotatedGroup = pieSvg.querySelector('#pieRotatedGroup');
+        const pieLabelGroup = pieSvg.querySelector('#pieLabelGroup');
+        const centerX = 290;
+        const centerY = 300;
+        const radius = 180;
+        const slices = [
+            { percentage: 35, color: '#88C89A', label: 'Waste Management (35%)', labelOffset: 1.35, angleOffset: -5 },
+            { percentage: 26, color: '#6681C1', label: 'Republic Services (26%)', labelOffset: 1.35, angleOffset: 0 },
+            { percentage: 39, color: '#EE7665', label: 'Rest of the Market (39%)', labelOffset: 1.45, angleOffset: 35 }
+        ];
+
+        function polarToCartesian(cx, cy, r, angle) {
+            const rad = (angle - 90) * Math.PI / 180;
+            return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+        }
+
+        function describeArc(cx, cy, r, startAngle, endAngle) {
+            const start = polarToCartesian(cx, cy, r, endAngle);
+            const end = polarToCartesian(cx, cy, r, startAngle);
+            const largeArc = endAngle - startAngle <= 180 ? "0" : "1";
+            return ["M", start.x, start.y, "A", r, r, 0, largeArc, 0, end.x, end.y].join(" ");
+        }
+
+        function drawPieChart() {
+            pieRotatedGroup.innerHTML = '';
+            pieLabelGroup.innerHTML = '';
+            const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            bgCircle.setAttribute("cx", 0);
+            bgCircle.setAttribute("cy", 0);
+            bgCircle.setAttribute("r", radius);
+            bgCircle.setAttribute("fill", slices[1].color);
+            pieRotatedGroup.appendChild(bgCircle);
+
+            let currentAngle = 0;
+            slices.forEach((slice, index) => {
+                const sliceAngle = (slice.percentage / 100) * 360;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + sliceAngle;
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", `M 0 0 L ${polarToCartesian(0, 0, radius, startAngle).x} ${polarToCartesian(0, 0, radius, startAngle).y} ${describeArc(0, 0, radius, startAngle, endAngle)} L 0 0 Z`);
+                path.setAttribute("fill", slice.color);
+                pieRotatedGroup.appendChild(path);
+
+                if (index === 2) {
+                    const insideStroke = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    insideStroke.setAttribute("d", describeArc(0, 0, radius, startAngle, endAngle));
+                    insideStroke.setAttribute("stroke", "#f7f7f7");
+                    insideStroke.setAttribute("stroke-width", 24);
+                    insideStroke.setAttribute("stroke-linecap", "butt");
+                    insideStroke.setAttribute("fill", "none");
+                    const clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+                    clip.setAttribute("id", `sliceClip${index}`);
+                    const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    clipPath.setAttribute("d", path.getAttribute("d"));
+                    clip.appendChild(clipPath);
+                    pieRotatedGroup.appendChild(clip);
+                    insideStroke.setAttribute("clip-path", `url(#sliceClip${index})`);
+                    pieRotatedGroup.appendChild(insideStroke);
+
+                    const outsideStroke = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    outsideStroke.setAttribute("d", describeArc(0, 0, radius, startAngle, endAngle));
+                    outsideStroke.setAttribute("stroke", "#f7f7f7");
+                    outsideStroke.setAttribute("stroke-width", 2);
+                    outsideStroke.setAttribute("stroke-linecap", "butt");
+                    outsideStroke.setAttribute("fill", "none");
+                    pieRotatedGroup.appendChild(outsideStroke);
+                }
+
+                const labelAngle = currentAngle + sliceAngle / 2;
+                const adjustedLabelAngle = labelAngle - 15 + (slice.angleOffset || 0);
+                const lineStart = polarToCartesian(centerX, centerY, radius, adjustedLabelAngle);
+                const lineEnd = polarToCartesian(centerX, centerY, radius * slice.labelOffset, adjustedLabelAngle);
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", lineStart.x);
+                line.setAttribute("y1", lineStart.y);
+                line.setAttribute("x2", lineEnd.x);
+                line.setAttribute("y2", lineEnd.y);
+                line.setAttribute("stroke", "rgb(102, 102, 102)");
+                line.setAttribute("stroke-width", 1);
+                pieLabelGroup.appendChild(line);
+
+                const labelPos = polarToCartesian(centerX, centerY, radius * slice.labelOffset + 25, adjustedLabelAngle);
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", labelPos.x);
+                text.setAttribute("y", labelPos.y);
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("dominant-baseline", "middle");
+                text.setAttribute("fill", "rgb(102, 102, 102)");
+                text.setAttribute("font-family", '"Inter", sans-serif');
+                text.setAttribute("font-size", "19px");
+                text.setAttribute("font-weight", "bold");
+                const [company, percentage] = slice.label.split(' (');
+                const tspan1 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                tspan1.setAttribute("style", "text-decoration: underline;");
+                tspan1.textContent = company + ' (';
+                const tspan2 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                tspan2.textContent = percentage;
+                text.appendChild(tspan1);
+                text.appendChild(tspan2);
+                pieLabelGroup.appendChild(text);
+
+                currentAngle += sliceAngle;
+            });
+        }
+        drawPieChart();
+
+        // 5. Stock Performance Chart
+        const stockData = [
+            { time: 1275399000, spx: 1030.71, rsg: 29.73, wm: 31.28999 },
+            { time: 1277991000, spx: 1101.6, rsg: 31.86, wm: 33.95 },
+            { time: 1280755800, spx: 1049.33, rsg: 29.42999, wm: 33.09 },
+            { time: 1283347800, spx: 1141.2, rsg: 30.49001, wm: 35.74001 },
+            { time: 1285939800, spx: 1183.26, rsg: 29.81, wm: 35.72 },
+            { time: 1288618200, spx: 1180.55, rsg: 28.14, wm: 34.25 },
+            { time: 1291213800, spx: 1257.64, rsg: 29.86, wm: 36.87 },
+            { time: 1294065000, spx: 1286.12, rsg: 30.84, wm: 37.87 },
+            { time: 1296570600, spx: 1327.22, rsg: 29.61, wm: 37.06 },
+            { time: 1298989800, spx: 1325.83, rsg: 30.03999, wm: 37.34 },
+            { time: 1301664600, spx: 1363.61, rsg: 31.62, wm: 39.46001 },
+            { time: 1304343000, spx: 1345.2, rsg: 31.52, wm: 38.88 },
+            { time: 1306935000, spx: 1320.64, rsg: 30.85001, wm: 37.27 },
+            { time: 1309527000, spx: 1292.28, rsg: 29.03, wm: 31.49001 },
+            { time: 1312205400, spx: 1218.89, rsg: 30.36, wm: 33.03999 },
+            { time: 1314883800, spx: 1131.42, rsg: 28.06, wm: 32.56 },
+            { time: 1317648600, spx: 1253.3, rsg: 28.46001, wm: 32.92999 },
+            { time: 1320154200, spx: 1246.96, rsg: 27.45, wm: 31.3 },
+            { time: 1322749800, spx: 1257.6, rsg: 27.55, wm: 32.71001 },
+            { time: 1325601000, spx: 1312.41, rsg: 29.28, wm: 34.75999 },
+            { time: 1328106600, spx: 1365.68, rsg: 29.83, wm: 34.98 },
+            { time: 1330612200, spx: 1408.47, rsg: 30.56, wm: 34.96001 },
+            { time: 1333373400, spx: 1397.91, rsg: 27.37, wm: 34.2 },
+            { time: 1335879000, spx: 1310.33, rsg: 26.36, wm: 32.44 },
+            { time: 1338557400, spx: 1362.16, rsg: 26.46001, wm: 33.39999 },
+            { time: 1341235800, spx: 1379.32, rsg: 28.92999, wm: 34.39999 },
+            { time: 1343827800, spx: 1406.58, rsg: 27.64999, wm: 34.58 },
+            { time: 1346765400, spx: 1440.67, rsg: 27.50999, wm: 32.08 },
+            { time: 1349098200, spx: 1412.16, rsg: 28.35001, wm: 32.74001 },
+            { time: 1351776600, spx: 1416.18, rsg: 28.47, wm: 32.57001 },
+            { time: 1354545000, spx: 1426.19, rsg: 29.33, wm: 33.74001 },
+            { time: 1357137000, spx: 1498.11, rsg: 31.89, wm: 36.38 },
+            { time: 1359729000, spx: 1514.68, rsg: 31.44, wm: 37.32001 },
+            { time: 1362148200, spx: 1569.19, rsg: 33, wm: 39.21001 },
+            { time: 1364823000, spx: 1597.57, rsg: 34.08, wm: 40.98 },
+            { time: 1367415000, spx: 1630.74, rsg: 34.10001, wm: 41.92999 },
+            { time: 1370266200, spx: 1606.28, rsg: 33.94, wm: 40.33 },
+            { time: 1372685400, spx: 1685.73, rsg: 33.91, wm: 42.03 },
+            { time: 1375363800, spx: 1632.97, rsg: 32.50999, wm: 40.44 },
+            { time: 1378215000, spx: 1681.55, rsg: 33.36, wm: 41.24001 },
+            { time: 1380634200, spx: 1756.54, rsg: 33.47, wm: 43.54 },
+            { time: 1383312600, spx: 1805.81, rsg: 34.91, wm: 45.68 },
+            { time: 1385994600, spx: 1848.36, rsg: 33.2, wm: 44.87 },
+            { time: 1388673000, spx: 1782.59, rsg: 32.03, wm: 41.78 },
+            { time: 1391437800, spx: 1859.45, rsg: 34.11, wm: 41.5 },
+            { time: 1393857000, spx: 1872.34, rsg: 34.16, wm: 42.07 },
+            { time: 1396359000, spx: 1883.95, rsg: 35.09, wm: 44.45 },
+            { time: 1398951000, spx: 1923.57, rsg: 35.4, wm: 44.68 },
+            { time: 1401715800, spx: 1960.23, rsg: 37.97, wm: 44.73 },
+            { time: 1404221400, spx: 1930.67, rsg: 37.93, wm: 44.89 },
+            { time: 1406899800, spx: 2003.37, rsg: 39.33, wm: 46.97 },
+            { time: 1409664600, spx: 1972.29, rsg: 39.02, wm: 47.53 },
+            { time: 1412170200, spx: 2018.05, rsg: 38.4, wm: 48.89 },
+            { time: 1415025000, spx: 2067.56, rsg: 39.61, wm: 48.73 },
+            { time: 1417444200, spx: 2058.9, rsg: 40.25, wm: 51.32 },
+            { time: 1420209000, spx: 1994.99, rsg: 39.68, wm: 51.43 },
+            { time: 1422887400, spx: 2104.5, rsg: 40.92, wm: 54.48 },
+            { time: 1425306600, spx: 2067.89, rsg: 40.56, wm: 54.23 },
+            { time: 1427895000, spx: 2085.51, rsg: 40.63, wm: 49.53 },
+            { time: 1430487000, spx: 2107.39, rsg: 40.29, wm: 49.65 },
+            { time: 1433165400, spx: 2063.11, rsg: 39.17, wm: 46.35 },
+            { time: 1435757400, spx: 2103.84, rsg: 42.53, wm: 51.13 },
+            { time: 1438608600, spx: 1972.18, rsg: 40.98, wm: 50.06 },
+            { time: 1441114200, spx: 1920.03, rsg: 41.2, wm: 49.81 },
+            { time: 1443706200, spx: 2079.36, rsg: 43.74, wm: 53.76 },
+            { time: 1446474600, spx: 2080.41, rsg: 43.93, wm: 53.77 },
+            { time: 1448980200, spx: 2043.94, rsg: 43.99, wm: 53.37 },
+            { time: 1451917800, spx: 1940.24, rsg: 43.7, wm: 52.95 },
+            { time: 1454337000, spx: 1932.23, rsg: 45.7, wm: 55.85 },
+            { time: 1456842600, spx: 2059.74, rsg: 47.65, wm: 59 },
+            { time: 1459517400, spx: 2065.3, rsg: 47.07, wm: 58.79 },
+            { time: 1462195800, spx: 2096.96, rsg: 48.28, wm: 60.95 },
+            { time: 1464787800, spx: 2098.86, rsg: 51.31, wm: 66.27 },
+            { time: 1467379800, spx: 2173.6, rsg: 51.26, wm: 66.12 },
+            { time: 1470058200, spx: 2170.95, rsg: 50.52, wm: 63.94 },
+            { time: 1472736600, spx: 2168.27, rsg: 50.45, wm: 63.76 },
+            { time: 1475501400, spx: 2126.15, rsg: 52.63, wm: 65.66 },
+            { time: 1478007000, spx: 2198.81, rsg: 55.49, wm: 69.52 },
+            { time: 1480602600, spx: 2238.83, rsg: 57.05, wm: 70.91 },
+            { time: 1483453800, spx: 2278.87, rsg: 57.38, wm: 69.5 },
+            { time: 1485959400, spx: 2363.64, rsg: 61.95, wm: 73.32 },
+            { time: 1488378600, spx: 2362.72, rsg: 62.81, wm: 72.92 },
+            { time: 1491226200, spx: 2384.2, rsg: 62.99, wm: 72.78 },
+            { time: 1493645400, spx: 2411.8, rsg: 63.61, wm: 72.91 },
+            { time: 1496323800, spx: 2423.41, rsg: 63.73, wm: 73.35 },
+            { time: 1499088600, spx: 2470.3, rsg: 64.22, wm: 75.15 },
+            { time: 1501594200, spx: 2471.65, rsg: 65.24, wm: 77.11 },
+            { time: 1504272600, spx: 2519.36, rsg: 66.06, wm: 78.27 },
+            { time: 1506951000, spx: 2575.26, rsg: 65.07, wm: 82.17 },
+            { time: 1509543000, spx: 2647.58, rsg: 64.94, wm: 82.25 },
+            { time: 1512138600, spx: 2673.61, rsg: 67.61, wm: 86.3 },
+            { time: 1514903400, spx: 2823.81, rsg: 68.8, wm: 88.43 },
+            { time: 1517495400, spx: 2713.83, rsg: 67.18, wm: 86.32 },
+            { time: 1519914600, spx: 2640.87, rsg: 66.23, wm: 84.12 },
+            { time: 1522675800, spx: 2648.05, rsg: 64.68, wm: 81.29 },
+            { time: 1525181400, spx: 2705.27, rsg: 67.43, wm: 82.71 },
+            { time: 1527859800, spx: 2718.37, rsg: 68.36, wm: 81.34 },
+            { time: 1530538200, spx: 2816.29, rsg: 72.48, wm: 90 },
+            { time: 1533130200, spx: 2901.52, rsg: 73.36, wm: 90.9 },
+            { time: 1536067800, spx: 2913.98, rsg: 72.66, wm: 90.36 },
+            { time: 1538400600, spx: 2711.74, rsg: 72.68, wm: 89.47 },
+            { time: 1541079000, spx: 2760.17, rsg: 77.34, wm: 93.75 },
+            { time: 1543847400, spx: 2506.85, rsg: 72.09, wm: 88.99 },
+            { time: 1546439400, spx: 2704.1, rsg: 76.71, wm: 95.67 },
+            { time: 1549031400, spx: 2784.49, rsg: 78.43, wm: 101.25 },
+            { time: 1551450600, spx: 2834.4, rsg: 80.38, wm: 103.91 },
+            { time: 1554125400, spx: 2945.83, rsg: 82.82, wm: 107.34 },
+            { time: 1556717400, spx: 2752.06, rsg: 84.59, wm: 109.35 },
+            { time: 1559568600, spx: 2941.76, rsg: 86.64, wm: 115.37 },
+            { time: 1561987800, spx: 2980.38, rsg: 88.65, wm: 117 },
+            { time: 1564666200, spx: 2926.46, rsg: 89.25, wm: 119.35 },
+            { time: 1567517400, spx: 2976.74, rsg: 86.55, wm: 115 },
+            { time: 1569936600, spx: 3037.56, rsg: 87.51, wm: 112.21 },
+            { time: 1572615000, spx: 3140.98, rsg: 88.65, wm: 112.91 },
+            { time: 1575297000, spx: 3230.78, rsg: 89.63, wm: 113.96 },
+            { time: 1577975400, spx: 3225.52, rsg: 95.05, wm: 121.7 },
+            { time: 1580740200, spx: 2954.22, rsg: 90.26, wm: 110.81 },
+            { time: 1583159400, spx: 2584.59, rsg: 75.06, wm: 92.56 },
+            { time: 1585747800, spx: 2912.43, rsg: 78.34, wm: 100.02 },
+            { time: 1588339800, spx: 3044.31, rsg: 85.46, wm: 106.75 },
+            { time: 1591018200, spx: 3100.29, rsg: 82.05, wm: 105.91 },
+            { time: 1593610200, spx: 3271.12, rsg: 87.25, wm: 109.6 },
+            { time: 1596461400, spx: 3500.31, rsg: 92.72, wm: 114 },
+            { time: 1598967000, spx: 3363, rsg: 93.35, wm: 113.17 },
+            { time: 1601559000, spx: 3269.96, rsg: 88.17, wm: 107.91 },
+            { time: 1604327400, spx: 3621.63, rsg: 96.72, wm: 119.13 },
+            { time: 1606833000, spx: 3756.08, rsg: 96.3, wm: 117.93 },
+            { time: 1609770600, spx: 3714.25, rsg: 90.52, wm: 111.32 },
+            { time: 1612189800, spx: 3811.16, rsg: 89.09, wm: 110.89 },
+            { time: 1614609000, spx: 3972.9, rsg: 99.35, wm: 129.02 },
+            { time: 1617283800, spx: 4181.18, rsg: 106.3, wm: 137.97 },
+            { time: 1620048600, spx: 4204.12, rsg: 109.18, wm: 140.68 },
+            { time: 1622554200, spx: 4297.49, rsg: 110.01, wm: 140.11 },
+            { time: 1625146200, spx: 4395.27, rsg: 118.36, wm: 148.26 },
+            { time: 1627911000, spx: 4522.69, rsg: 124.13, wm: 155.11 },
+            { time: 1630503000, spx: 4307.53, rsg: 120.06, wm: 149.36 },
+            { time: 1633095000, spx: 4605.39, rsg: 134.6, wm: 160.23 },
+            { time: 1635773400, spx: 4567.01, rsg: 132.26, wm: 160.67 },
+            { time: 1638369000, spx: 4766.19, rsg: 139.45, wm: 166.9 },
+            { time: 1641220200, spx: 4515.54, rsg: 127.66, wm: 150.44 },
+            { time: 1643725800, spx: 4373.95, rsg: 120.28, wm: 144.4 },
+            { time: 1646145000, spx: 4530.42, rsg: 132.5, wm: 158.5 },
+            { time: 1648819800, spx: 4131.92, rsg: 134.27, wm: 164.44 },
+            { time: 1651498200, spx: 4132.16, rsg: 133.84, wm: 158.51 },
+            { time: 1654090200, spx: 3785.39, rsg: 130.87, wm: 152.98 },
+            { time: 1656682200, spx: 4130.289, rsg: 138.66, wm: 164.56 },
+            { time: 1659360600, spx: 3954.99, rsg: 142.72, wm: 169.03 },
+            { time: 1662039000, spx: 3585.61, rsg: 136.04, wm: 160.21 },
+            { time: 1664803800, spx: 3871.97, rsg: 132.62, wm: 158.37 },
+            { time: 1667309400, spx: 4080.11, rsg: 139.29, wm: 167.72 },
+            { time: 1669905000, spx: 3839.49, rsg: 128.99, wm: 156.88 },
+            { time: 1672756200, spx: 4076.59, rsg: 124.82, wm: 154.73 },
+            { time: 1675261800, spx: 3970.16, rsg: 128.93, wm: 149.76 },
+            { time: 1677681000, spx: 4109.32, rsg: 135.22, wm: 163.17 },
+            { time: 1680528600, spx: 4169.49, rsg: 144.62, wm: 166.05 },
+            { time: 1682947800, spx: 4179.84, rsg: 141.63, wm: 161.92 },
+            { time: 1685626200, spx: 4450.37, rsg: 153.17, wm: 173.42 },
+            { time: 1688391000, spx: 4588.97, rsg: 151.11, wm: 163.79 },
+            { time: 1690896600, spx: 4507.67, rsg: 144.13, wm: 156.78 },
+            { time: 1693575000, spx: 4288.04, rsg: 142.51, wm: 152.44 },
+            { time: 1696253400, spx: 4193.81, rsg: 148.49, wm: 164.33 },
+            { time: 1698845400, spx: 4567.81, rsg: 161.84, wm: 170.99 },
+            { time: 1701441000, spx: 4769.82, rsg: 164.91, wm: 179.1 },
+            { time: 1704205800, spx: 4845.66, rsg: 171.12, wm: 185.63 },
+            { time: 1706797800, spx: 5096.28, rsg: 183.6, wm: 205.65 },
+            { time: 1709303400, spx: 5254.34, rsg: 191.44, wm: 213.15 },
+            { time: 1711978200, spx: 5035.7, rsg: 191.7, wm: 208.02 },
+            { time: 1714570200, spx: 5277.5, rsg: 185.19, wm: 210.73 },
+            { time: 1717421400, spx: 5460.49, rsg: 194.34, wm: 213.34 },
+            { time: 1719840600, spx: 5522.29, rsg: 194.32, wm: 202.66 },
+            { time: 1722519000, spx: 5648.39, rsg: 208.21, wm: 212.04 },
+            { time: 1725370200, spx: 5762.49, rsg: 200.84, wm: 207.6 },
+            { time: 1727789400, spx: 5705.44, rsg: 198, wm: 215.85 },
+            { time: 1730467800, spx: 6032.39, rsg: 218.3, wm: 228.22 },
+            { time: 1733149800, spx: 5881.62, rsg: 201.18, wm: 201.79 },
+            { time: 1735828200, spx: 6040.52, rsg: 216.87, wm: 220.26 },
+            { time: 1738593000, spx: 5954.51, rsg: 237.02, wm: 232.78 },
+            { time: 1741012200, spx: 5572.08, rsg: 231.71, wm: 224.21 }
+        ];
+        const baselines = { '2010': 1277991000, '2014': 1404221400, '2020': 1585747800 };
+
+        function formatDate(timestamp) {
+            return new Date(timestamp * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function prepareStockData(baselineTimestamp) {
+            const filtered = stockData.filter(data => data.time >= baselineTimestamp);
+            const initial = filtered[0];
+            return {
+                spxData: filtered.map(d => ({ x: new Date(d.time * 1000), y: parseFloat(((d.spx - initial.spx) / initial.spx * 100).toFixed(2)) })),
+                rsgData: filtered.map(d => ({ x: new Date(d.time * 1000), y: parseFloat(((d.rsg - initial.rsg) / initial.rsg * 100).toFixed(2)) })),
+                wmData: filtered.map(d => ({ x: new Date(d.time * 1000), y: parseFloat(((d.wm - initial.wm) / initial.wm * 100).toFixed(2)) }))
+            };
+        }
+
+        const stockCtx = document.getElementById('stockChart');
+        const stockChart = new Chart(stockCtx, {
+            type: 'line',
+            data: {
+                datasets: [
+                    { label: 'SPX % Return', data: [], borderColor: '#1e90ff', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.1 },
+                    { label: 'RSG % Return', data: [], borderColor: '#32cd32', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.1 },
+                    { label: 'WM % Return', data: [], borderColor: '#ff4500', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.1 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: {
+                    x: { type: 'time', time: { unit: 'year', displayFormats: { year: 'yyyy' } }, title: { display: true, text: 'Year', font: { size: 12, weight: '600' } }, ticks: { font: { size: 12 }, callback: val => { const year = new Date(val).getFullYear(); return (year >= 2011 && year <= 2025 && year % 2 === 1) ? year : ''; }, maxTicksLimit: 20 }, grid: { drawTicks: false, color: 'rgba(102, 102, 102, 0.05)' } },
+                    y: { title: { display: true, text: 'Percent Return (%)', font: { size: 12, weight: '600' } }, min: -25, max: 600, ticks: { font: { size: 12 }, stepSize: 25, callback: val => (val === -25 || val === 0 || val === 50 || (val > 50 && val % 100 === 0)) ? val + '%' : null }, grid: { color: 'rgba(102, 102, 102, 0.1)' } }
+                }
+            }
+        });
+
+        function updateStockChart(baselineKey) {
+            const { spxData, rsgData, wmData } = prepareStockData(baselines[baselineKey]);
+            stockChart.data.datasets[0].data = spxData;
+            stockChart.data.datasets[1].data = rsgData;
+            stockChart.data.datasets[2].data = wmData;
+            stockChart.options.scales.y.max = { '2010': 700, '2014': 600, '2020': 300 }[baselineKey] || 600;
+            stockChart.update();
+            document.getElementById('stockFootnote').textContent = `Percentage returns calculated from ${formatDate(baselines[baselineKey])} baseline`;
+        }
+
+        function updatePillPosition() {
+            const inputs = document.querySelectorAll('.segmented-control .option input');
+            inputs.forEach((elem, index) => {
+                if (elem.checked) {
+                    const pill = document.querySelector('.segmented-control .selection');
+                    pill.style.width = `${elem.offsetWidth - 2}px`;
+                    pill.style.transform = `translateX(${elem.offsetWidth * index + 1}px)`;
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const inputs = document.querySelectorAll('.segmented-control .option input');
+            inputs.forEach(input => {
+                input.addEventListener("change", () => {
+                    updateStockChart(input.value);
+                    updatePillPosition();
+                });
+            });
+            window.addEventListener("resize", updatePillPosition);
+            updateStockChart('2014');
+            updatePillPosition();
+        });
+    </script>
+</body>
+</html>
